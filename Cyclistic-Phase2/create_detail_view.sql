@@ -4,6 +4,7 @@ Creates the ride-level detail view for drill-down analysis in Tableau.
 One row per ride — no aggregation.
 Joins cyclistic_rides with weather_data and holidays.
 Holiday duplicates collapsed to comma-separated string.
+Fix: ClickHouse returns 1970-01-01 not NULL for unmatched LEFT JOIN Date columns.
 Companion to cyclistic_summary (aggregated overview table).
 */
 
@@ -33,7 +34,6 @@ SELECT
     r.start_lng,
     r.end_lat,
     r.end_lng,
-    -- Weather context
     w.temp,
     w.feelslike,
     w.windspeed,
@@ -48,9 +48,8 @@ SELECT
     w.sunset,
     w.moonphase,
     w.conditions                            AS weather_conditions,
-    -- Holiday context
-    if(h.holiday_date IS NOT NULL, 1, 0)    AS is_holiday,
-    if(h.holiday_date IS NOT NULL, h.holiday_names, '') AS holiday_name
+    if(h.holiday_date <> toDate('1970-01-01'), 1, 0)               AS is_holiday,
+    if(h.holiday_date <> toDate('1970-01-01'), h.holiday_names, '') AS holiday_name
 FROM cyclistic_rides r
 LEFT JOIN weather_data w ON r.ride_date = w.weather_date
 LEFT JOIN (
