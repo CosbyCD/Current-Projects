@@ -1,11 +1,11 @@
-*
+/*
 File: create_summary_table.sql
 Creates the hourly station-level summary table for Tableau animated visualization.
 Joins cyclistic_rides with weather_data and holidays.
 Aggregates to one row per station per hour per day per member type.
 Includes derived time fields: month, day_of_week for Tableau filtering.
 Holiday duplicates on same date collapsed to comma-separated string.
-Replaces validation query (summary_query_validation.sql).
+Fix: ClickHouse returns 1970-01-01 not NULL for unmatched LEFT JOIN Date columns.
 */
 
 DROP TABLE IF EXISTS cyclistic_summary;
@@ -40,8 +40,8 @@ SELECT
     w.sunset,
     w.moonphase,
     w.conditions                            AS weather_conditions,
-    if(h.holiday_date IS NOT NULL, 1, 0)    AS is_holiday,
-    if(h.holiday_date IS NOT NULL, h.holiday_names, '') AS holiday_name
+    if(h.holiday_date <> toDate('1970-01-01'), 1, 0)             AS is_holiday,
+    if(h.holiday_date <> toDate('1970-01-01'), h.holiday_names, '') AS holiday_name
 FROM cyclistic_rides r
 LEFT JOIN weather_data w ON r.ride_date = w.weather_date
 LEFT JOIN (
