@@ -78,3 +78,13 @@ ORDER BY
     r.ride_date,
     r.ride_hour,
     r.start_station_name;
+
+
+-- Verify table creation
+SELECT
+    count() AS total_rows,
+    min(ride_date) AS first_date,
+    max(ride_date) AS last_date,
+    countIf(is_holiday = 1) AS holiday_rides,
+    countIf(is_holiday = 0) AS non_holiday_rides
+FROM cyclistic_summary;
