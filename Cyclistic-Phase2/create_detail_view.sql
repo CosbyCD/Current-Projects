@@ -59,3 +59,14 @@ LEFT JOIN (
     FROM holidays
     GROUP BY holiday_date
 ) h ON r.ride_date = h.holiday_date;
+
+-- Verify table creation
+SELECT
+    count() AS total_rows,
+    min(started_at) AS earliest_ride,
+    max(started_at) AS latest_ride,
+    countIf(is_holiday = 1) AS holiday_rides,
+    countIf(is_holiday = 0) AS non_holiday_rides,
+    countIf(member_casual = 'member') AS member_rides,
+    countIf(member_casual = 'casual') AS casual_rides
+FROM cyclistic_detail;
