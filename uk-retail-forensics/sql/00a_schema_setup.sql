@@ -1,0 +1,8 @@
+-- ============================================================
+-- SETUP: Create dedicated schema
+-- WHAT: Creates a schema separate from the existing Cyclistic
+--       tables in public, to keep UK Retail work isolated.
+-- WHY: Clean separation between projects on the same server.
+-- ============================================================
+-- Created via pgAdmin GUI: right-click Schemas → Create → Schema
+-- Schema name: uk_retail, owner: postgres
