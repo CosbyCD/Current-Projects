@@ -1,0 +1,17 @@
+-- ============================================================
+-- VERIFICATION: Distinct customer count — baseline for recency check
+-- WHAT: Counts the total number of distinct, non-null customer_id
+--       values in clean_transactions.
+-- WHY: Establishes the expected row count for the recency field
+--      (query 45) — if recency has one row per customer, its
+--      row count should match this number exactly. Query 46
+--      first attempted this without DISTINCT and returned an
+--      unusable transaction-level count; this is the corrected
+--      version.
+-- RESULT: 5,941. Notably close to the 5,942 unique customers
+--      reported in an independent academic analysis of the full
+--      raw dataset — off by exactly one, consistent with the
+--      data quality work done in Chapter One (e.g., the
+--      unattributable customer 13256 outlier).
+-- ============================================================
+SELECT COUNT(DISTINCT customer_id) FROM uk_retail.clean_transactions WHERE customer_id IS NOT NULL;

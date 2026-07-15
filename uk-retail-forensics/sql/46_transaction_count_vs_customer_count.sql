@@ -1,0 +1,14 @@
+-- ============================================================
+-- FOLLOW-UP: Transaction row count vs. distinct customer count
+-- WHAT: Counts total transaction rows with a non-null customer_id
+--       in clean_transactions — NOT distinct customers, all rows.
+-- WHY: First attempt at establishing a baseline for the recency
+--      field's expected row count. Result (797,884) was
+--      immediately recognized as too large to be a customer
+--      count — it's counting every transaction row, not unique
+--      customers. Corrected version (query 47) uses
+--      COUNT(DISTINCT customer_id) instead.
+-- RESULT: 797,884 — confirmed as transaction-row count, not
+--      customer count. Superseded by query 47.
+-- ============================================================
+SELECT COUNT(*) FROM uk_retail.clean_transactions WHERE customer_id IS NOT NULL;

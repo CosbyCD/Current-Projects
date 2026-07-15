@@ -1,6 +1,6 @@
 # UK Online Retail II — Investigation Log
 
-**Short on time? Prefer to see it rather than read it? [Jump to the results →](#chapter-two-ahead-deriving-the-six-customer-behavior-fields)** *(interactive visualization link coming soon — this currently jumps to the Chapter Two preview)*
+**Short on time? Prefer to see it rather than read it? [Jump to the results →](#chapter-two-deriving-the-six-customer-behavior-fields)** *(interactive visualization link coming soon — this currently jumps to the start of Chapter Two)*
 
 **Purpose:** This document tracks the meta-narrative of this investigation — the order things were looked at, what was found, and what each finding inspired next. Individual `.sql` files in `/sql/` document *what* each query does and *why* it was run in isolation. This document connects them into a single readable story: the chain of custody for the reasoning itself, not just the data.
 
@@ -24,11 +24,10 @@ There's a broader question behind this specific project too: the volume of data 
 
 ## Project Roadmap — Chapters and Sections
 
-This investigation is structured as a book, not a flat list of steps. **Chapter One** is everything documented in this file: setup, investigation, discovery, and the construction of a fully clean, reconciled working table. It has its own beginning (query 00a), its own rising complexity (the data cleaning threads, especially the duplicate-row discovery and the outlier investigation), and its own resolution (`clean_transactions`, verified and trustworthy). The "Phase 0" through "Phase 7" labels used throughout the detailed sections below are the sections *within* Chapter One, not separate top-level stages of the overall project.
+This investigation is structured as a book, not a flat list of steps. **Chapter One** is everything documented in this file: setup, investigation, discovery, and the construction of a fully clean, reconciled working table. It has its own beginning (query 00a), its own rising complexity (the data cleaning threads, especially the duplicate-row discovery and the outlier investigation), and its own resolution (`clean_transactions`, verified and trustworthy). The "Phase 1" through "Phase 7" labels used throughout the detailed sections below are the sections *within* Chapter One, not separate top-level stages of the overall project.
 
 **Chapter One (complete): Loading, Investigation, and the Clean Table.**
-- [Phase 0: Environment Setup](#phase-0--environment-setup) (schema, raw table)
-- [Phase 1: Initial Validation](#phase-1--initial-validation)
+- [Phase 1: Environment Setup and Initial Validation](#phase-1--environment-setup-and-initial-validation) (schema, raw table, row count and date range confirmation)
 - [Phase 2: Stock Code Investigation](#phase-2--stock-code-investigation)
 - [Phase 3: The Negative Quantity / Blank Description Thread](#phase-3--the-negative-quantity--blank-description-thread)
 - [Phase 4: Return Rate Methodology](#phase-4--return-rate-methodology)
@@ -40,7 +39,7 @@ This investigation is structured as a book, not a flat list of steps. **Chapter 
 
 **Verification/Audit Pass (bridge between Chapter One and Chapter Two).** Before Chapter Two begins, a dedicated audit pass will confirm the integrity of everything produced in Chapter One, rather than assuming it's correct because it was documented along the way. This exists specifically to catch a broken assumption or a mismatched file now, while the full reasoning trail is fresh and the scope is still contained — rather than discovering an error deep into Chapter Two and having to unwind work built on top of it. The audit covers: file integrity (every `.sql` file opens and matches its documented purpose), numbering integrity (no gaps, no accidental duplicates, no leftover ordering mistakes), query-to-output pairing (every file has its matching result, apart from the four documented exceptions — queries 24, 38, 41, and 43 — which either build tables directly or returned a zero-row result with no exportable data grid), re-execution of the load-bearing queries underpinning `clean_transactions` to confirm they still produce identical results from a fresh session, and a direct row-level spot-check of `clean_transactions` itself, rather than relying on the row-count reconciliation alone as proof.
 
-**[Jump ahead to Chapter Two →](#chapter-two-ahead-deriving-the-six-customer-behavior-fields)** — skip the full Chapter One detail below and go straight to what's next.
+**[Jump ahead to Chapter Two →](#chapter-two-deriving-the-six-customer-behavior-fields)** — skip the full Chapter One detail below and go straight to what's next.
 
 ---
 
@@ -50,8 +49,7 @@ All SQL files live in a single flat `/sql/` folder, numbered in the true chronol
 
 | Query Range | Phase | What's In It |
 |---|---|---|
-| 00a – 00b | Phase 0 | Schema and raw table setup |
-| 01 | Phase 1 | Row count and date range validation |
+| 00a – 01 | Phase 1 | Schema/table setup, row count and date range validation |
 | 02 – 05 | Phase 2 | Stock code investigation: trailing letters, casing duplicates, family/variant rollup |
 | 06 – 13 | Phase 3 & 4 | Negative quantity / blank description thread; return rate methodology (order vs. line-item) |
 | 14 | Phase 5 | Full column completeness audit |
@@ -63,11 +61,9 @@ All SQL files live in a single flat `/sql/` folder, numbered in the true chronol
 
 ---
 
-## Phase 0 — Environment Setup
+## Phase 1 — Environment Setup and Initial Validation
 
 **00a / 00b** — Created a dedicated `uk_retail` schema in PostgreSQL. Built `raw_transactions` matching the dataset's 8 original columns exactly, no derived fields. Loaded the source CSV via pgAdmin's Import/Export GUI. This table is treated as permanent, untouched source of truth — nothing is ever deleted from it directly.
-
-## Phase 1 — Initial Validation
 
 **01** — Confirmed row count (1,067,371) and date range (Dec 1, 2009 – Dec 9, 2011) matched the documented dataset. This was the first checkpoint: if the import hadn't landed correctly, everything after this point would be built on bad data.
 
@@ -141,7 +137,7 @@ All three groups share zero unit_price and no customer_id universally, with zero
 
 **Decision: preserve as a standalone tagged table, not just exclude.** Rather than simply filtering these 4,709 rows out when building the clean customer-transaction table, they are being pulled into their own permanent table (`uk_retail.excluded_rows`), tagged by which thread identified each row. Two reasons: first, this keeps `clean_transactions` correctly scoped to real customer activity without losing the underlying evidence. Second, and more significant — this excluded set is itself a characterizable artifact worth analyzing on its own terms. The pattern across all 4,709 rows (zero price, no customer attribution, blank or note-like descriptions, concentrated in tight timestamp bursts as observed in Phase 6 thread 1) is consistent with manual, free-text data entry during stock reconciliation, rather than a structured, constrained input process. A practical recommendation follows directly from this: if the source system relies on free-text entry (typing a value in) rather than constrained input (a dropdown or point-and-click selection from a defined list), that is precisely where this kind of error — blank fields, inconsistent placeholder notes, missing structured data — tends to originate. This finding could serve a real operational purpose beyond this project: illustrating concretely, from real transaction data, why input controls matter and what happens downstream when they're absent — a tangible example for training or process-improvement conversations, not just an abstract argument for "cleaner data entry."
 
-## Phase 6, Thread 4 — Zero and Low Unit Price Rows
+### Phase 6, Thread 4 — Zero and Low Unit Price Rows
 
 **26** — Ran a broad check of unit_price values under 50p across the full dataset, excluding anything already tagged in `excluded_rows`. Result: 75,359 rows total in this range — but the overwhelming majority (73,468) fall between 10p and 49p, which is not treated as a data quality issue. This is a gift-ware retailer; small items (ribbon, gift tags, craft supplies) legitimately cost under 50 pence. Low price alone is not evidence of error. The genuinely notable group is the 1,511 rows priced at exactly zero.
 
@@ -182,7 +178,7 @@ This process also raised a new, unplanned question: customer_id is stored as VAR
 
 **Practical rule going forward:** any query comparing or displaying customer_id must consistently account for the trailing ".0" — either always stripping it or always including it, but never mixing the two, which is exactly the mistake made accidentally in query 31. This should be standardized once when building the clean table, rather than re-discovered on a query-by-query basis.
 
-## Phase 6, Thread 5 — Country Field Placeholder Values
+### Phase 6, Thread 5 — Country Field Placeholder Values
 
 **33** — Checked the country field for placeholder or non-country values, the last open thread from the Phase 5 completeness audit. The audit had already confirmed zero true blank/NULL values in country, but a populated field can still contain a placeholder rather than genuine geographic data — the same distinction already found in description (Thread 3's "check"/"found" placeholder text). Result: a clean, short list of 43 distinct values. The overwhelming majority are genuine countries or recognized abbreviations (United Kingdom, EIRE, Germany, RSA, USA, etc.). Two values stood out as non-specific: **"Unspecified"** (756 rows) and **"European Community"** (61 rows). This is a notably clean field compared to every other Phase 6 thread — only 817 of 1,067,371 rows (0.08%) are ambiguous.
 
@@ -259,12 +255,188 @@ Before Chapter Two begins, a dedicated audit pass was run to confirm the integri
 
 ---
 
-## Chapter Two (Ahead): Deriving the Six Customer Behavior Fields
+## Chapter Two: Deriving the Six Customer Behavior Fields
 
 With the verification/audit pass complete and `clean_transactions` confirmed sound, Chapter Two begins — building out the six customer behavior fields (recency, frequency, monetary value, order-to-order interval, product diversity, return rate) that are the actual extraction thesis of this project: information already present in each line item, hidden in plain sight across the eight raw columns, waiting to be pulled out rather than sourced from anywhere external. This chapter produces the direct inputs to the eventual rotatable nodal visualization — Chapter Three, if the project continues to be framed this way.
 
+Return rate (field 6) was already investigated methodologically in Chapter One (queries 11–13, order-level vs. line-item-level), but that work was built against `raw_transactions` before `clean_transactions` existed. It will be recalculated at the end of this chapter against the clean table, applying the same methodology decision rather than repeating the investigation.
+
+### Field 1: Recency
+
+**45** — Built the recency field: days since each customer's most recent order, calculated against `clean_transactions`. Reference point is fixed as the dataset's own most recent transaction date (Dec 9, 2011), not today's real-world date, since this is a historical dataset and recency needs a stable reference point within its own window to be meaningful — confirmed explicitly before running. Result formatted as a clean integer (`EXTRACT(DAY FROM ...)`) rather than a verbose interval, correcting an initial draft that returned full interval strings like "14 days 21:45:00."
+
+**46** — First attempt at establishing a baseline row count for verification: `COUNT(*)` on all transaction rows with a customer_id. Result (797,884) was immediately recognized as too large to be a customer count — it counts every transaction line, not unique customers. Kept and documented as a corrected mistake rather than discarded, consistent with this project's standard (see query 31's handling of the same situation).
+
+**47** — Corrected version using `COUNT(DISTINCT customer_id)`. Result: **5,941** distinct customers. Notably close to the 5,942 unique customers reported in an independent academic analysis of the full raw dataset (found during earlier verification research) — off by exactly one, consistent with and directly explained by the data-quality work done in Chapter One (the unattributable customer 13256 outlier being the clearest single contributor).
+
+**48** — Individual spot-check: pulled customer 13468's actual transaction history directly rather than trusting the aggregate alone. Confirmed their most recent transaction is 2011-12-08, correctly yielding `recency_days = 1` against the Dec 9 dataset maximum.
+
+**49** — Row-count reconciliation: re-ran query 45's grouping logic without the date math and counted the result. Returned exactly **5,941**, matching query 47's distinct customer count precisely.
+
+**Field 1 status: complete and fully verified.** Two independent verification methods (aggregate row-count reconciliation and individual row-level spot-check) both confirm the field is accurate, with no customers dropped or duplicated.
+
+### Field 2: Frequency
+
+**Open question resolved before building.** Should cancelled orders (invoice_no starting with 'C') count toward a customer's frequency? Rather than choosing one definition, both were built and compared directly — consistent with this project's standing practice of testing both sides of a genuine methodology question (established with return rate in Chapter One).
+
+**50** — Built frequency counting only completed orders (`invoice_no NOT LIKE 'C%'`). Top customer: 14911 with 398 completed orders.
+
+**51** — Built frequency counting all distinct orders, including cancellations. Same top customer: 14911, now at 510 — a gap of 112.
+
+**52** — Joined both versions with a `cancellation_gap` column to see the difference systematically across all 5,941 customers, rather than eyeballing two separate lists. The gap was not trivial or evenly spread — the top customer's 112-order gap means over a fifth of their apparent order volume was actually cancelled, and dozens of other customers showed double-digit gaps.
+
+**Decision: track both, discard neither.** Given the gap proved real and behaviorally meaningful rather than noise, both components are kept as permanent, separately tracked parts of the customer profile — the same principle already established with `excluded_rows` in Chapter One: investigated signal doesn't get thrown away just because it complicates a single-number field. `frequency_completed` reflects genuine completed purchase behavior; `cancellation_count` is its own behavioral signal — a customer who cancels frequently is meaningfully different from one who rarely does, even at identical completed-purchase volume, and this distinction may matter directly once these fields are placed into the eventual 3D visualization.
+
+**Why this project consistently builds both sides of a fork rather than one.** This isn't a one-off decision made for frequency specifically — it's a standing operating principle applied throughout this project, rooted in professional habits that predate it. Whoever receives an answer will eventually ask about the side that wasn't given; having it ready the first time costs a small amount of extra effort up front and avoids a second, slower round trip later. The same instinct also means noticing and addressing a need before it's been explicitly asked for, not only answering the question as narrowly posed. From this point forward in the document, any fork in methodology is treated this way by default: both sides built, both sides compared, and the decision about what to keep made from the comparison rather than assumed in advance.
+
+**53** — Final field query, relabeling and reordering query 52's logic as the official field structure: `frequency_completed` and `cancellation_count`, one row per customer (5,941 rows), ordered by customer_id for lookup.
+
+**Field 2 status: complete.** Two-component field, both halves independently derived and cross-validated against the same underlying order data.
+
+### Field 3: Monetary Value
+
+Following the same both-sides practice established with return rate and frequency.
+
+**54** — Built monetary value counting only completed (non-cancelled) purchase lines: `monetary_gross`. Top customer: 18102 at $580,987.04.
+
+**55** — Built monetary value across all transaction lines, including cancellations (which carry negative quantity and therefore reduce the total naturally): `monetary_net`. Same top customer, now $570,380.61 — roughly $10,600 lower, consistent with expected cancellation drag.
+
+**56** — Joined both versions with a `cancelled_value` gap column. This surfaced something well beyond ordinary cancellation drag: several customers showed a `monetary_net` that was the **exact negative mirror** of their `monetary_gross` — e.g., customer 12918 at $10,953.50 gross and precisely **−$10,953.50** net, meaning their cancelled value ($21,907.00) was exactly double their purchases. This exact-doubling pattern repeated across multiple customers (16446, 12918, 14802, 15802, 13290) — too precise to be coincidental cancellation behavior.
+
+**Critical discovery: an unresolved gap from Chapter One.** Investigated directly rather than assumed.
+
+**57** — Pulled customer 12918's full transaction history. Found the cause immediately: three rows, all with stock_code `M` ("Manual"), two minutes apart — a manual charge, cancelled, followed immediately by a second identical manual charge, also cancelled. All three are administrative entries, not real purchases. Stock_code `M` is one of the non-numeric administrative codes fully investigated in Chapter One, Thread 3 (queries 19–23) — but that investigation characterized the *pattern*, it never actually built an exclusion rule for these codes into `clean_transactions` itself.
+
+**58** — Checked the scope directly: does `clean_transactions` still contain administrative stock codes at all? Result: **yes, extensively**. POST (2,079 rows, $110,430.41), DOT (1,423 rows, $309,844.10), M (1,392 rows, −$83,311.28), AMAZONFEE (36 rows, −$221,520.50), BANK CHARGES, C2, and dozens of others — all still present in the table that was declared complete and independently verified at the end of Chapter One. Combined, these represent hundreds of thousands of dollars in non-product administrative activity sitting inside what was supposed to be a clean, purchase-only dataset.
+
+**Why this matters beyond monetary value:** these administrative rows carry real invoice numbers and, in cases like customer 12918, real customer_id attribution — meaning this gap doesn't only corrupt monetary value. Frequency (Field 2) is very likely also affected, since a "Manual" entry with its own invoice number would have been counted as a real order in both the completed and all-orders frequency counts.
+
+**Decision: amend `clean_transactions` at the source, not patch each field individually.** Rather than adding a workaround exclusion to monetary value alone, the clean table itself is being rebuilt with one additional rule — excluding any row where stock_code doesn't match the standard numeric/numeric-plus-letter product code pattern — so every field built from this point forward, and every field already built, draws from a single, genuinely complete clean table.
+
+**59** — Rebuilt `clean_transactions` from scratch (query 38's logic plus the new stock-code filter). This is the second amendment to the clean table since Chapter One's formal closure, and it invalidates the row-level correctness of Fields 1 and 2 as previously built — both need to be re-run and re-verified against the amended table before Field 3 can be finalized. Note: like queries 24 and 38 before it, query 59 has no matching file in `/output/` — it is a `DROP TABLE` + `CREATE TABLE AS` statement that builds the table directly rather than returning an exportable result set. Result: 1,022,519 rows (down from 1,028,437 pre-amendment, a reduction of 5,918 rows).
+
+**60** — Verified zero administrative stock codes remain in the amended table (`stock_code !~ '^[0-9]+[A-Za-z]*$'` returns 0 rows). Amendment confirmed complete and correctly applied.
+
+**Field 3 status: paused pending table amendment.** Fields 1 (Recency) and 2 (Frequency) must be rebuilt and re-verified against the amended `clean_transactions` before any field in this chapter can be considered final.
+
+**What the next three sections are doing, and why.** Discovering the administrative-code gap partway through Field 3 raised an uncomfortable but necessary question: if this leaked through Chapter One's supposedly complete, independently-verified table, what else built on top of it might be wrong? Rather than patching Field 3 alone and hoping Fields 1 and 2 were unaffected, every field already built is being re-run from scratch against the corrected table and re-verified with the same rigor as the first time — not re-checked by assumption, but by rerunning the actual queries and confirming the actual numbers. The following three sections walk through that rebuild field by field, in order, noting exactly what changed and why for each one.
+
+### Field 1 Rebuild: Recency (post-amendment)
+
+**61** — Re-ran the recency field (originally query 45) against the amended `clean_transactions`. Spot-checked customer 13468 directly: unchanged, still showing 2011-12-08 as last order date and `recency_days = 1`, identical to the pre-amendment result — a good early sign the field itself wasn't structurally affected by the administrative-code contamination.
+
+**62** — Re-ran the distinct customer count to confirm the row-count baseline still matched. Result: **5,875**, down from the pre-amendment **5,941** — a real change of 66 fewer customers, not a discrepancy to wave away.
+
+**63** — Investigated directly rather than assuming the drop was expected. Pulled all customer_ids whose administrative-code rows in `raw_transactions` existed but who no longer appear anywhere in the amended `clean_transactions`. Confirmed exactly **66 customers**, and every one of them has *only* administrative-code activity (POST, DOT, M, BANK CHARGES, etc.) in their entire transaction history — no genuine product purchases at all. Their removal is correct, not an error: these were never real purchasing customers, they existed in the dataset only because of postage charges, manual corrections, bank fees, or similar non-product activity. Worth noting for completeness: not every one of the 66 had a negative total (e.g., customer 17846 at +$2,033.10) — some represent positive-dollar administrative credits/adjustments rather than only cancellations — but the underlying conclusion holds regardless of sign: none of the 66 were real customers.
+
+**Field 1 status: rebuilt, re-verified, and finalized against the amended table.** Customer count revised from 5,941 to 5,875, with the exact difference identified and explained at the individual customer level, not just accepted as a plausible-sounding number.
+
+### Field 2 Rebuild: Frequency (post-amendment)
+
+**64** — Re-ran completed-orders-only frequency against the amended table. Top customer 14911 dropped from 398 to **373** completed orders — 25 of the original count were administrative entries, not real orders.
+
+**65** — Re-ran all-distinct-orders frequency against the amended table. Same customer dropped from 510 to **466** — a reduction of 44.
+
+**66** — Rebuilt the comparison. Customer 14911's cancellation gap is now 466 − 373 = **93**, down from the original 112. The 19-order difference (112 vs. 93) confirms that roughly a sixth of that customer's originally-measured "cancellations" were actually administrative invoice activity incorrectly counted as customer order behavior — exactly the contamination this rebuild was meant to catch and remove.
+
+**Field 2 status: rebuilt and re-verified against the amended table.** `frequency_completed` and `cancellation_count` now reflect genuine customer behavior only, with administrative activity fully excluded from both components.
+
+### Field 3 Rebuild: Monetary Value (post-amendment)
+
+**67** — Re-ran monetary_gross against the amended table. Top customer unchanged (18102, $580,987.04, identical to pre-amendment — this customer's gross purchases apparently included no administrative-code contamination). Other totals shifted downward across the board as administrative activity was removed.
+
+**68** — Rather than assuming customer 12918's absence from query 67's result list was sufficient proof, directly confirmed it: queried `clean_transactions` for any row at all belonging to customer 12918. Result: **0 rows** — fully and directly confirmed absent, consistent with query 63's finding that their entire transaction history was administrative activity (the three "Manual" entries that caused the original exact-doubling anomaly).
+
+**69** — Re-ran monetary_net against the amended table. Top customer unchanged (18102, $578,408.64, close to the rebuilt gross figure — the small remaining gap now reflects genuine cancellation activity, not administrative contamination).
+
+**70** — Checked whether the other four customers from the original exact-doubling finding (16446, 14802, 15802, 13290) were also now fully absent, the way 12918 was confirmed absent in query 68. Result: three were absent as expected, but **customer 16446 still had 4 remaining rows** — an unexpected result worth stopping on rather than dismissing.
+
+**A correction to the record.** Re-examining query 56's original data showed 16446 had been mischaracterized: their numbers ($168,472.50 gross / −$6.10 net) reflect near-total cancellation of a large purchase history, not the exact negative-mirror pattern the other four customers showed. Grouping 16446 with the true exact-doubling cases in the earlier writeup was an error, now corrected here.
+
+**71** — Pulled all 4 of 16446's remaining rows directly. Found something significant: one single transaction — 80,995 units of "PAPER CRAFT, LITTLE BIRDIE" (stock_code 23843) at £2.08, purchased and self-cancelled twelve minutes later — accounts for nearly the customer's entire gross total ($168,469.60 of $168,472.50).
+
+**72** — Checked this product's typical order size for comparison, the same way the original 12,540-unit outlier was verified in Chapter One. Result: only 2 rows exist for this stock code in the entire `clean_transactions` table — the purchase and its own cancellation. No other order of any size exists to compare against.
+
+**73** — Checked the untouched `raw_transactions` table directly, in case cleaning steps had removed other legitimate instances of this product. Result: identical — only these same 2 rows exist anywhere in the original 1,067,371-row dataset. This product was never ordered by anyone else, ever.
+
+**Conclusion: a third, previously-undetected gap.** This is a confirmed data entry error — a stock code appearing for the first and only time in the dataset's history, at a quantity roughly 674 times larger than any other single order seen in this project, self-cancelled twelve minutes later, on December 9, 2011 (the dataset's final recorded day). It passes every exclusion rule built so far (real stock code, real customer, properly 'C'-prefixed cancellation), which is why it survived two prior table amendments undetected. Because the purchase and cancellation are equal and opposite, it does not distort `monetary_net` — but it does inflate `monetary_gross` and both frequency counts, since it carries a genuine invoice number. Decision: exclude it from `clean_transactions` regardless of its negligible net effect, on the same principle applied throughout this project — a confirmed data entry error doesn't get kept just because it happens to cancel itself out; the row is factually wrong and shouldn't be trusted in any downstream calculation, and it will also be logged as its own tracked issue for the eventual data-quality findings summary, the same way prior confirmed errors have been.
+
+**74** — Amended `clean_transactions` a third time, adding one specific exclusion for stock_code 23843 (both the 80,995-unit purchase and its cancellation) on top of every rule already in place. Like queries 24, 38, and 59 before it, this is a `DROP TABLE` + `CREATE TABLE AS` statement with no matching file in `/output/`. This amendment invalidates the row-level correctness of Fields 1, 2, and 3 as rebuilt against the second amendment — all three require one more rebuild pass before Chapter Two can proceed to Field 4.
+
+**75** — Verified the third amendment applied correctly: zero rows remain for stock_code 23843, and the row count dropped by exactly 2 (the purchase and its cancellation), matching expectations precisely.
+
+**A note on why these fields are built one at a time, not all six together.** Both the administrative-code contamination (queries 56-58) and the 16446 outlier (queries 70-73) were caught specifically because each field was built, compared against itself two ways, sorted by the gap, and actually looked at before moving to the next field — not because of anything inherent to SQL that requires this. If all six fields had been built together in one wide query from the start, that comparison-and-sort mechanism could technically still exist, but a table with a dozen-plus columns per customer is far harder to scan by eye, and there's real pressure to treat "the query ran without an error" as "done," skipping the manual review that actually found these gaps. Answering six questions simultaneously makes it easy to get lost in the aggregate; answering one question at a time, on its own smaller result set, keeps the anomaly small enough and isolated enough to actually notice. The errors in this chapter weren't caught by clever SQL — they were caught by deliberately narrowing focus to one field, looking at it directly, and only then moving forward.
+
+### Third Rebuild Pass: Fields 1, 2, and 3 (post-third-amendment)
+
+With `clean_transactions` amended a third time, every field already built needed to be re-run and re-verified once more — the same full discipline applied after the second amendment, not skipped just because this gap was smaller in scope.
+
+**Field 1 (Recency), rebuilt.** Query 76 re-ran the recency field against the third-amendment table. A specific concern was checked directly rather than assumed: since customer 16446's excluded transaction was dated 2011-12-09 (the dataset's final recorded day), it was worth confirming the dataset's maximum date itself hadn't shifted. It hadn't — multiple other customers had later transactions that same day. Query 77 confirmed the distinct customer count held steady at 5,875, matching the second-amendment figure exactly, since customer 16446 retained other legitimate transactions and wasn't fully removed from the table the way the 66 administrative-only customers were.
+
+**Field 2 (Frequency), rebuilt.** Queries 78 and 79 re-ran completed-only and all-orders frequency against the third-amendment table. Customer 16446 was spot-checked directly in both: `frequency_completed` dropped to exactly **1** (their one remaining legitimate invoice, 553573), and `frequency_all_orders` also came back at **1**, confirming their `cancellation_gap` is now correctly **0** — fully resolved from whatever inflated figure included the erroneous invoice pair. Query 80 rebuilt the full comparison and confirmed no other customer's numbers were affected by this amendment; the sorted-by-gap list matched the second-rebuild result exactly at every position above 16446.
+
+**Field 3 (Monetary Value), rebuilt.** Query 81 rebuilt `monetary_gross`; query 82 spot-checked customer 16446 directly and confirmed their gross value dropped to **$2.90** — the combined value of their two legitimate items, down from the original $168,472.50 that was almost entirely the erroneous 80,995-unit transaction. Query 83 rebuilt `monetary_net`; query 84 confirmed customer 16446's net value was **also $2.90**, essentially unchanged from before this amendment. This was the expected and predicted outcome: because the erroneous purchase and its cancellation exactly offset each other (+£168,469.60 and −£168,469.60), removing both together could only ever affect `monetary_gross` and frequency, never `monetary_net` — confirmed directly rather than left as an assumption.
+
+**Third rebuild pass status: complete.** All three fields (Recency, Frequency, Monetary Value) have now been built, broken, diagnosed, and rebuilt twice over the course of this chapter — once for the administrative-code gap, once for the isolated 80,995-unit outlier — with every claim about what changed and why verified against actual query results rather than inferred. `clean_transactions`, and every field derived from it, is now considered fully reconciled heading into Field 4.
+
+### Field 4: Order-to-Order Interval
+
+**85** — Built the interval field as average days between a customer's consecutive completed orders, using `EXTRACT(DAY FROM ...)` to measure whole-day gaps, consistent with the day-based convention used in recency. Only meaningful for customers with 2 or more completed orders; single-order customers do not appear in this result. Cross-checked against Field 2: `orders_used_in_calc` values matched `frequency_completed` minus one for every customer checked, confirming the interval logic is drawing from the same underlying order data as frequency.
+
+**A related but separate question raised during this field's construction:** whether cancelled orders should count toward interval spacing, and — a distinct question from a stakeholder's perspective — whether customers who cancel an order tend to return afterward at all. The second question is a retention question, not an interval-spacing question, and was built and tracked separately rather than folded into Field 4.
+
+**86** — Built as its own standalone check: for every customer with at least one cancellation, whether they placed a completed order after their most recent cancellation date. Result: **1,741 customers (71.3%) returned and ordered again after cancelling; 702 (28.7%) never returned.** Tracked as a distinct finding, not part of any of the six core fields.
+
+**A methodological fork: whole-day vs. fractional-day interval measurement.** Spot-checking customer 18139 (query 87's whole-day result showed `avg = 0.0` despite having 6 completed orders) confirmed real elapsed time between their orders — hours apart within a day, and roughly 17 hours overnight — that the whole-day calculation rounds down to zero. Rather than choosing one measurement standard, both were built and are tracked side by side, consistent with the standing practice established across this chapter (return rate, frequency, monetary value): when a genuine measurement choice exists, build both sides and let the comparison inform the field rather than settling on one definition in advance.
+
+**87** — Whole-day interval (the original query 85 logic, renumbered to sit alongside its fractional counterpart). Matches the day-based convention used elsewhere in this project; understates spacing for customers whose orders cluster within 24-hour windows.
+
+**88** — Fractional-day interval, using `EXTRACT(EPOCH FROM ...)` divided by 86,400 seconds to preserve sub-day precision. Customer 18139 now reads as 0.17 days instead of 0.0, correctly distinguishing tightly-clustered same-day orders from the smallest possible gaps. Row counts matched query 87 exactly across every customer checked, confirming both versions are built from identical underlying order data and differ only in measurement precision.
+
+**Field 4 status: complete, two-component field.** `avg_interval_whole_day` and `avg_interval_fractional_day` are both tracked as permanent parts of the customer profile, alongside the separately-tracked cancellation-return finding (query 86).
+
+### Field 5: Product Diversity
+
+Following the same both-sides practice, using the two-tier structure identified in Chapter One (Phase 2, query 05): stock codes can represent a specific variant (e.g., 15056BL) or roll up to a base product family (e.g., 15056, covering all colorways of that item).
+
+**89** — Built variant-level diversity: distinct stock codes purchased per customer, using completed orders only. Top customer: 14911 at 2,546 distinct variants.
+
+**90** — Built family-level diversity: distinct product families purchased per customer, stripping trailing letters from stock codes to roll variants up to their base item. Same customer: 2,348 distinct families. Checked across the top three customers (14911, 12748, 17841): family counts were lower than variant counts in every case, consistent with multiple variants collapsing into shared families.
+
+**Field 5 status: complete, two-component field.** `distinct_variants_purchased` and `distinct_families_purchased` are both tracked as permanent parts of the customer profile.
+
+### Field 6: Return Rate (rebuild)
+
+Recalculated against `clean_transactions`, applying the order-level and line-item-level methodology already established and compared in Chapter One (queries 11–13), which had been built against `raw_transactions` before the clean table existed.
+
+**91** — Order-level return rate rebuilt: cancelled orders divided by total orders, per customer.
+
+**92** — Line-item-level return rate rebuilt: cancelled line items divided by total line items, per customer.
+
+**93** — Joined both measures with a gap column, same comparison pattern used for frequency and monetary value. The gap was positive (order-level higher than line-item-level) for nearly every customer — a pattern consistent with cancelling a small number of whole orders that each represent only a small fraction of total line items across a customer's full order history. Two customers showed the reverse pattern: customer 15369 (8.3% order-level vs. 40.4% line-item-level) and customer 15461 (33.3% vs. 60.0%), where cancelled activity concentrated as a high proportion of items within a small number of orders rather than spreading across many separate cancelled orders.
+
+**Field 6 status: complete, two-component field.** `order_return_rate_pct` and `line_item_return_rate_pct` are both tracked as permanent parts of the customer profile, completing the rebuild of all six derived customer behavior fields against the fully reconciled `clean_transactions` table.
+
+### Final Field Assembly
+
+**94** — Joined all six fields (recency, frequency, monetary value, order-to-order interval, product diversity, return rate — eleven component columns in total, since four of the six fields are two-part) into one permanent table, `uk_retail.customer_behavior_fields`, one row per customer. Like queries 24, 38, 59, and 74 before it, this is a `DROP TABLE` + `CREATE TABLE AS` statement with no matching file in `/output/`. Row count: 5,875, matching the established distinct customer count exactly.
+
+**95** — Spot-checked customer 13468's full row against every value already independently verified earlier in this chapter: recency (1 day, matching query 48), frequency (72 completed, 14 cancelled), monetary value ($12,793.28 gross, $12,518.01 net), both interval measures (9.9 whole-day, 10.35 fractional-day), both diversity measures (290 variants, 278 families), and both return rate measures (16.3% order-level, 2.9% line-item-level). Every value matched exactly.
+
+**Chapter Two status: core deliverable complete.** `uk_retail.customer_behavior_fields` — 5,875 customers, eleven derived columns across six behavioral dimensions — is built, verified at the individual customer level, and ready to serve as the direct input for the eventual 3D visualization.
+
+### Resolving an Open Question from Chapter One: The No-Customer-ID Rows
+
+Query 35's review (item 4, Phase 7) flagged an undecided question: whether to keep or exclude the 243,007 rows with no customer_id from `clean_transactions`. That question was never formally resolved in writing at the time — every customer-level field built since has functionally excluded these rows via `WHERE customer_id IS NOT NULL`, but that was an operational default carried forward, not a documented decision.
+
+Deliberately deferred to this point in Chapter Two rather than resolved back in Chapter One: `clean_transactions` needed to be fully reconciled first. Two further rounds of contamination were found and removed after Chapter One's formal close — the administrative stock codes (queries 56-60) and the isolated 80,995-unit outlier (queries 70-75). Segregating and investigating the no-customer-ID rows before those amendments would have meant working from a table that still had unrelated noise mixed into it. With `clean_transactions` now fully reconciled through three amendments, this question can finally be resolved against a trustworthy base rather than one that would have needed revisiting anyway.
+
+**96** — Built `uk_retail.unattributed_transactions` as a copy of every row in `clean_transactions` where `customer_id IS NULL`. `clean_transactions` itself is left completely unchanged — this is a copy for reference and future examination, not a removal, consistent with this project's standing rule established with `excluded_rows`: never delete, always segregate and preserve. Unlike `excluded_rows`, nothing here has been identified as a data entry error — these are legitimate transactions missing a customer identifier, a common real-world pattern (guest checkouts, anonymous sales), not evidence of a mistake.
+
+**Result: 228,297 rows, not the originally reported 243,007.** Directly confirmed with a separate count against `clean_transactions` before accepting the number. The gap (243,007 − 228,297 = 14,710) is fully explainable: the 243,007 figure was established in Phase 5 (query 14), against `raw_transactions`, before deduplication and any of the three subsequent `clean_transactions` amendments. Some portion of the original no-customer-ID rows were themselves exact duplicates, administrative-code rows, or otherwise excluded during cleaning — removed from `clean_transactions` for those separate, already-documented reasons before ever reaching this segregation step, and therefore no longer present to copy. The 14,710-row difference is not a new error; it reflects rows already accounted for elsewhere in this project's cleaning history.
+
 ---
 
-**Document version:** v13 — *In progress; this document is actively updated as the investigation continues. Version number increments with each substantive revision.*
+**Document version:** v25 — *In progress; this document is actively updated as the investigation continues. Version number increments with each substantive revision.*
 
 *This document is updated as each new phase of investigation is completed. Individual query documentation lives in `/sql/`; this file is the narrative connecting them.*

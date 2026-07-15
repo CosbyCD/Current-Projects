@@ -1,0 +1,3 @@
+"invoice_no","stock_code","description","quantity","unit_price","customer_id","invoice_date"
+"581483","23843","PAPER CRAFT , LITTLE BIRDIE",80995,2.08,"16446.0","2011-12-09 09:15:00"
+"C581484","23843","PAPER CRAFT , LITTLE BIRDIE",-80995,2.08,"16446.0","2011-12-09 09:27:00"

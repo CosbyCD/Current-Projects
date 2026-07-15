@@ -1,0 +1,2 @@
+"customer_id","recency_days","frequency_completed","cancellation_count","monetary_gross","monetary_net","avg_interval_whole_day","avg_interval_fractional_day","distinct_variants_purchased","distinct_families_purchased","order_return_rate_pct","line_item_return_rate_pct"
+"13468",1,72,14,12793.28,12518.01,9.9,10.35,290,278,16.3,2.9
