@@ -1,0 +1,42 @@
+<h2 class="sr-only">Correlation heatmap of all eleven derived customer behavior fields, showing which fields move together and which are independent</h2>
+<div id="heatmapWrap" style="overflow-x: auto;"></div>
+<script>
+const data = {"labels": ["recency", "frequency", "cancellations", "gross $", "net $", "interval (whole)", "interval (frac)", "variants", "families", "return % (order)", "return % (line)"], "matrix": [[1.0, -0.26, -0.2, -0.12, -0.12, -0.03, -0.03, -0.32, -0.33, -0.1, 0.0], [-0.26, 1.0, 0.75, 0.63, 0.62, -0.26, -0.26, 0.69, 0.69, 0.09, 0.03], [-0.2, 0.75, 1.0, 0.41, 0.41, -0.2, -0.2, 0.57, 0.57, 0.41, 0.23], [-0.12, 0.63, 0.41, 1.0, 1.0, -0.13, -0.13, 0.41, 0.41, 0.05, 0.03], [-0.12, 0.62, 0.41, 1.0, 1.0, -0.13, -0.13, 0.41, 0.41, 0.04, 0.02], [-0.03, -0.26, -0.2, -0.13, -0.13, 1.0, 1.0, -0.23, -0.23, -0.06, -0.04], [-0.03, -0.26, -0.2, -0.13, -0.13, 1.0, 1.0, -0.23, -0.23, -0.06, -0.04], [-0.32, 0.69, 0.57, 0.41, 0.41, -0.23, -0.23, 1.0, 1.0, 0.12, -0.06], [-0.33, 0.69, 0.57, 0.41, 0.41, -0.23, -0.23, 1.0, 1.0, 0.12, -0.06], [-0.1, 0.09, 0.41, 0.05, 0.04, -0.06, -0.06, 0.12, 0.12, 1.0, 0.65], [0.0, 0.03, 0.23, 0.03, 0.02, -0.04, -0.04, -0.06, -0.06, 0.65, 1.0]]};
+
+function colorFor(v) {
+  const t = Math.abs(v);
+  if (v > 0.03) {
+    const l = Math.round(95 - t*55);
+    return `hsl(210, 60%, ${l}%)`;
+  } else if (v < -0.03) {
+    const l = Math.round(95 - t*55);
+    return `hsl(4, 65%, ${l}%)`;
+  }
+  return 'var(--surface-1)';
+}
+function textColorFor(v) {
+  return Math.abs(v) > 0.5 ? '#fff' : 'var(--text-primary)';
+}
+
+const n = data.labels.length;
+const cell = 52;
+const labelCol = 110;
+let html = `<div style="display:grid; grid-template-columns:${labelCol}px repeat(${n}, ${cell}px); font-size:11px;">`;
+html += `<div></div>`;
+data.labels.forEach(l => {
+  html += `<div style="writing-mode:vertical-rl; transform:rotate(180deg); text-align:left; padding:4px 0; color:var(--text-secondary); font-size:10px;">${l}</div>`;
+});
+for (let i = 0; i < n; i++) {
+  html += `<div style="display:flex; align-items:center; padding-right:8px; color:var(--text-secondary); font-size:10px; justify-content:flex-end;">${data.labels[i]}</div>`;
+  for (let j = 0; j < n; j++) {
+    const v = data.matrix[i][j];
+    html += `<div title="${data.labels[i]} vs ${data.labels[j]}: ${v}" style="width:${cell}px; height:${cell}px; display:flex; align-items:center; justify-content:center; background:${colorFor(v)}; color:${textColorFor(v)}; border:1px solid var(--surface-2); font-size:10px;">${v.toFixed(2)}</div>`;
+  }
+}
+html += `</div>`;
+document.getElementById('heatmapWrap').innerHTML = html;
+</script>
+<div style="display: flex; align-items: center; gap: 16px; margin-top: 12px; font-size: 12px; color: var(--text-secondary);">
+  <span style="display:flex; align-items:center; gap:6px;"><span style="width:14px;height:14px;background:hsl(210,60%,40%);border-radius:2px;"></span>Positive correlation</span>
+  <span style="display:flex; align-items:center; gap:6px;"><span style="width:14px;height:14px;background:hsl(4,65%,40%);border-radius:2px;"></span>Negative correlation</span>
+</div>

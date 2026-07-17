@@ -1,0 +1,23 @@
+<div style="position: relative; width: 100%; height: 340px;">
+  <canvas id="recencyChart" role="img" aria-label="Bar chart of customer count by 25-day recency bucket, showing smooth decay from 0-24 days through roughly 325-349 days, then an anomalous rise peaking at 375-399 days before resuming decay">Recency histogram: counts decay from 1518 at 0-24 days down to 41 at 325-349 days, then rise to 258 at 375-399 days, before resuming decay to the 700-749 day range.</canvas>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const labels = ["0-24","25-49","50-74","75-99","100-124","125-149","150-174","175-199","200-224","225-249","250-274","275-299","300-324","325-349","350-374","375-399","400-424","425-449","450-474","475-499","500-524","525-549","550-574","575-599","600-624","625-649","650-674","675-699","700-724","725-749"];
+const counts = [1518,680,531,267,167,143,159,145,123,123,127,96,111,41,152,258,208,150,110,70,86,85,73,97,72,70,64,47,32,70];
+const bumpStart = 14, bumpEnd = 17;
+const colors = counts.map((_, i) => (i >= bumpStart && i <= bumpEnd) ? '#e34948' : '#2a78d6');
+new Chart(document.getElementById('recencyChart'), {
+  type: 'bar',
+  data: { labels: labels, datasets: [{ label: 'Customers', data: counts, backgroundColor: colors, borderRadius: 4 }] },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { ticks: { autoSkip: false, maxRotation: 60, minRotation: 60, font: { size: 10 } }, grid: { display: false } },
+      y: { grid: { color: '#e1e0d9' }, title: { display: true, text: 'Customer count' } }
+    }
+  }
+});
+</script>
