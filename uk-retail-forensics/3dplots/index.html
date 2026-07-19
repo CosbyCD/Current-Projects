@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Exhibit Log — UK Online Retail II Forensics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #14171c;
+    --ink-soft: #1f242c;
+    --paper: #ede8da;
+    --paper-dim: #cfc7ac;
+    --manila: #c7b786;
+    --manila-dark: #a89968;
+    --brass: #c9a227;
+    --brass-dim: #8f7318;
+    --line: rgba(237, 232, 218, 0.14);
+    --line-strong: rgba(237, 232, 218, 0.26);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ink);
+    color: var(--paper);
+    font-family: 'Inter', sans-serif;
+    line-height: 1.6;
+  }
+
+  .wrap {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 32px 96px;
+  }
+
+  header {
+    padding: 72px 0 40px;
+    border-bottom: 1px solid var(--line-strong);
+    margin-bottom: 8px;
+  }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    color: var(--manila);
+    text-decoration: none;
+    margin-bottom: 24px;
+  }
+
+  .back-link:hover {
+    color: var(--brass);
+  }
+
+  .case-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--brass);
+    margin: 0 0 20px;
+  }
+
+  h1 {
+    font-family: 'Newsreader', serif;
+    font-weight: 500;
+    font-size: 44px;
+    line-height: 1.15;
+    margin: 0 0 20px;
+    max-width: 680px;
+  }
+
+  .thesis {
+    font-family: 'Newsreader', serif;
+    font-style: italic;
+    font-size: 19px;
+    color: var(--paper-dim);
+    max-width: 560px;
+    margin: 0 0 28px;
+  }
+
+  .meta-row {
+    display: flex;
+    gap: 28px;
+    flex-wrap: wrap;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--manila-dark);
+  }
+
+  .meta-row span { color: var(--manila); }
+
+  .method-note {
+    padding: 32px 0 40px;
+    border-bottom: 1px solid var(--line);
+    font-size: 15px;
+    color: var(--paper-dim);
+    max-width: 640px;
+  }
+
+  .method-note strong {
+    color: var(--paper);
+    font-weight: 500;
+  }
+
+  .log {
+    margin-top: 40px;
+  }
+
+  .log-heading {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--manila-dark);
+    margin: 0 0 24px;
+  }
+
+  .exhibit {
+    display: grid;
+    grid-template-columns: 96px 1fr auto;
+    gap: 24px;
+    align-items: start;
+    padding: 26px 0;
+    border-bottom: 1px solid var(--line);
+    transition: background 0.15s ease;
+  }
+
+  .exhibit:hover {
+    background: var(--ink-soft);
+  }
+
+  .exhibit-number {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--brass);
+    padding-top: 3px;
+  }
+
+  .exhibit-number small {
+    display: block;
+    font-size: 10px;
+    color: var(--manila-dark);
+    letter-spacing: 0.08em;
+    margin-top: 4px;
+  }
+
+  .exhibit-title {
+    font-family: 'Newsreader', serif;
+    font-size: 19px;
+    font-weight: 500;
+    margin: 0 0 6px;
+    color: var(--paper);
+  }
+
+  .exhibit-desc {
+    font-size: 14px;
+    color: var(--paper-dim);
+    max-width: 440px;
+    margin: 0;
+  }
+
+  .exhibit-desc em {
+    display: block;
+    margin-top: 8px;
+    color: var(--manila);
+    font-style: italic;
+    font-size: 13px;
+  }
+
+  .exhibit-link {
+    align-self: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    color: var(--ink);
+    background: var(--brass);
+    text-decoration: none;
+    padding: 9px 16px;
+    border-radius: 2px;
+    white-space: nowrap;
+    transition: background 0.15s ease;
+  }
+
+  .exhibit-link:hover {
+    background: #ddb643;
+  }
+
+  footer {
+    margin-top: 64px;
+    padding-top: 28px;
+    border-top: 1px solid var(--line-strong);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--manila-dark);
+  }
+
+  footer a { color: var(--brass); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+
+  @media (max-width: 640px) {
+    h1 { font-size: 32px; }
+    .exhibit { grid-template-columns: 1fr; gap: 10px; }
+    .exhibit-number { padding-top: 0; }
+    .exhibit-link { justify-self: start; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <a class="back-link" href="../README.md">&larr; Back to project overview</a>
+    <p class="case-tag">Case File — UK Online Retail II · Chapter Three</p>
+    <h1>Does a fully rotatable, interactive visualization change what you find?</h1>
+    <p class="thesis">Fourteen exhibits from a documented forensic analysis of 5,852 customers — each one built, rotated, and cross-checked against SQL before being called a finding.</p>
+    <div class="meta-row">
+      <div>Investigator: <span>Cherrie Cosby</span></div>
+      <div>Opened: <span>Jul 6, 2026</span></div>
+      <div>Chapter Three closed: <span>Jul 16, 2026</span></div>
+    </div>
+  </header>
+
+  <div class="method-note">
+    Every exhibit below traces back to a numbered SQL query in the project's investigation log. <strong>Rotate them. Hover the points. Look for what a flat chart would hide.</strong> None of what's shown here was accepted on the strength of the visual alone — each finding was independently confirmed against the underlying data before it made it into this log.
+  </div>
+
+  <div class="log">
+    <p class="log-heading">Exhibit log</p>
+
+    <div class="exhibit">
+      <div class="exhibit-number">Q98<small>Source data</small></div>
+      <div>
+        <p class="exhibit-title">RFM cube — initial build</p>
+        <p class="exhibit-desc">The first pass: recency, frequency, and monetary value plotted as one point per customer, linear scale.</p>
+      </div>
+      <a class="exhibit-link" href="rfm_3d_scatter_option1.html" target="_blank" rel="noopener">Open exhibit ↗</a>
+    </div>
+
+    <div class="exhibit">
+      <div class="exhibit-number">Q98<small>Full scale</small></div>
+      <div>
+        <p class="exhibit-title">RFM cube — full population, linear</p>
+        <p class="exhibit-desc">Scaled to all 5,852 customers. A handful of extreme outliers flatten everyone else into an undifferentiated mass — the problem the log-scale rebuild solves.</p>
+      </div>
+      <a class="exhibit-link" href="uk_retail_rfm_3d.html" target="_blank" rel="noopener">Open exhibit ↗</a>
+    </div>
+
+    <div class="exhibit">
+      <div class="exhibit-number">Q98<small>v2</small></div>
+      <div>
+        <p class="exhibit-title">RFM cube — full population, v2</p>
+        <p class="exhibit-desc">Second pass at the full-scale linear build.</p>
+      </div>
+      <a class="exhibit-link" href="rfm_3d_scatter_full_v2.html" target="_blank" rel="noopener">Open exhibit ↗</a>
+    </div>
+
+    <div class="exhibit">
+      <div class="exhibit-number">Q98<small>Log-scaled</small></div>
+      <div>
+        <p class="exhibit-title">RFM cube — log-scaled</p>
+        <p class="exhibit-desc">The finding: no customer past ~300–400 days of silence ever reaches high spend. Recency and value travel together — there's no hidden population of lapsed high-value customers. <em>Revised by Query 105 (recency_monetary_funnel_fixed_bucket_check) and Query 106 (recency_monetary_funnel_quartile_crosstab), run July 18, 2026 to confirm this chart-rotation finding in SQL for the first time: the absolute claim did not hold. Revised statement — average customer spend does decline steadily as recency increases, but a small, real population of high-value dormant customers exists at every recency level (61 of 1,463 top-quartile spenders also sit in the most-lapsed recency quartile). The funnel governs the typical customer; it does not govern the tail.</em></p>
+      </div>
+      <a class="exhibit-link" href="uk_retail_rfm_3d_log.html" target="_blank" rel="noopener">Open exhibit ↗</a>
+    </div>
+
+    <div class="exhibit">
+      <div class="exhibit-number">Opt.2<small>Sample</small></div>
+      <div>
+        <p class="exhibit-title">Customer-rank line trace — sample</p>
+        <p class="exhibit-desc">Customers sorted by spend, frequency and recency traced as a line rather than plotted as independent points.</p>
+      </div>
+      <a class="exhibit-link" href="rfm_3d_option2_customer_axis.html" target="_blank" rel="noopener">Open exhibit ↗</a>
+    </div>
+
+    <div class="exhibit">
+      <div class="exhibit-number">Opt.2<small>Full scale</small></div>
+      <div>
+        <p class="exhibit-title">Customer-rank line trace — full population</p>
+        <p class="exhibit-desc">The same trace at full scale — visibly noisier, as expected at 5,852 points.</p>
+      </div>
+      <a class="exhibit-link" href="uk_retail_rfm_option2_full.html" target="_blank" rel="noopener">Open exhibit ↗</a>
+    </div>
+
+    <div class="exhibit">
+      <div class="exhibit-number">Opt.2<small>Colored</small></div>
+      <div>
+        <p class="exhibit-title">Customer-rank line trace — colored and weighted</p>
+        <p class="exhibit-desc">The finding: frequency stays flat for ~80% of customers, then spikes sharply in the top 15–20% by spend. Three RFM fields telling one story, not three. <em>Revised by Query 107 (frequency_recency_lockstep_fixed_bucket_check) and Query 108 (frequency_monetary_lockstep_decile_crosstab), run July 18, 2026 to confirm this chart-rotation finding in SQL for the first time. Revised statement — average frequency does decline steadily as recency increases, matching the funnel's shape, but the frequency spike is narrower than originally estimated: it is concentrated specifically in the top decile (90th+ percentile) by spend, not the broader top 15–20% suggested by the chart.</em></p>
+      </div>
+      <a class="exhibit-link" href="uk_retail_rfm_option2_colored.html" target="_blank" rel="noopener">Open exhibit ↗</a>
+    </div>
+
+    <div class="exhibit">
+      <div class="exhibit-number">Q99</div>
+      <div>
+        <p class="exhibit-title">Recency distribution — 25-day bins</p>
+        <p class="exhibit-desc">The SQL check that ruled out a false gap and found a real one instead: a genuine spike at 350–424 days, later traced to a November 2010 pre-Christmas stocking cohort.</p>
+      </div>
+      <a class="exhibit-link" href="recency_histogram_25day_bins.html" target="_blank" rel="noopener">Open exhibit ↗</a>
+    </div>
+
+    <div class="exhibit">
+      <div class="exhibit-number">—<small>Chapter Three</small></div>
+      <div>
+        <p class="exhibit-title">Rolling average — frequency and recency by spend rank</p>
+        <p class="exhibit-desc">The noisy line trace, smoothed and shown against the raw points underneath — built to have the "is this just noise?" answer ready before anyone asks.</p>
+      </div>
+      <a class="exhibit-link" href="rolling_average_frequency_recency_by_monetary_rank.html" target="_blank" rel="noopener">Open exhibit ↗</a>
+    </div>
+
+    <div class="exhibit">
+      <div class="exhibit-number">Q102</div>
+      <div>
+        <p class="exhibit-title">Customer 17961 — order history</p>
+        <p class="exhibit-desc">An anomalously low average order value, traced order-by-order to a small retailer restocking in modest increments year-round, then bulking up ahead of Christmas.</p>
+      </div>
+      <a class="exhibit-link" href="customer_17961_order_history.html" target="_blank" rel="noopener">Open exhibit ↗</a>
+    </div>
+
+    <div class="exhibit">
+      <div class="exhibit-number">Q103</div>
+      <div>
+        <p class="exhibit-title">Correlation heatmap — all eleven fields</p>
+        <p class="exhibit-desc">A fast orientation pass across every derived field. Surfaced two genuinely identical pairs and flagged the trio worth building into a cube.</p>
+      </div>
+      <a class="exhibit-link" href="correlation_heatmap_all_eleven_fields.html" target="_blank" rel="noopener">Open exhibit ↗</a>
+    </div>
+
+    <div class="exhibit">
+      <div class="exhibit-number">—<small>Exploratory</small></div>
+      <div>
+        <p class="exhibit-title">Cube — cancellations, return rate, frequency</p>
+        <p class="exhibit-desc">The first look at the trio the heatmap flagged as promising.</p>
+      </div>
+      <a class="exhibit-link" href="cube_cancellations_return_rate_frequency.html" target="_blank" rel="noopener">Open exhibit ↗</a>
+    </div>
+
+    <div class="exhibit">
+      <div class="exhibit-number">Q104</div>
+      <div>
+        <p class="exhibit-title">Cube — recolored, the wave and the spray</p>
+        <p class="exhibit-desc">Two distinct structures, separated by color. The "spray" turned out to be a statistical artifact of low order counts, not a true customer cluster — see the investigation log for the full write-up.</p>
+      </div>
+      <a class="exhibit-link" href="cube_cancellations_return_rate_frequency_v2.html" target="_blank" rel="noopener">Open exhibit ↗</a>
+    </div>
+
+    <div class="exhibit">
+      <div class="exhibit-number">Q105–121<small>Verification</small></div>
+      <div>
+        <p class="exhibit-title">Gut-check review — funnel, lockstep &amp; veer-off, confirmed in SQL</p>
+        <p class="exhibit-desc">A post-close pass running the recency-monetary funnel and frequency-monetary lockstep through SQL for the first time, closing every open thread including the veer-off observation and the last unresolved monetary spike. Both headline findings held directionally but were revised in their specifics — including a discovery that gross spend overstated real customer value for at least 7 customers due to cancelled bulk orders.</p>
+      </div>
+      <a class="exhibit-link" href="gutcheck_105_121_funnel_lockstep_review.html" target="_blank" rel="noopener">Open exhibit ↗</a>
+    </div>
+
+  </div>
+
+  <footer>
+    Full methodology, SQL, and findings write-up in the <a href="../docs/investigation_log.md">investigation log</a>. Part of the <a href="https://github.com/CosbyCD/Current-Projects">UK Online Retail II</a> forensics project.
+  </footer>
+
+</div>
+</body>
+</html>

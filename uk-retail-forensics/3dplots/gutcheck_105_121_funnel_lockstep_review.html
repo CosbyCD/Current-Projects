@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Gut-Check Exhibits — Queries 105-121</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.32.0/plotly.min.js"></script>
+<style>
+  body {
+    background: #1a1815;
+    color: #d8d2c4;
+    font-family: 'Courier New', Courier, monospace;
+    margin: 0;
+    padding: 40px 20px 80px;
+  }
+  .header {
+    max-width: 1000px;
+    margin: 0 auto 40px;
+    border-bottom: 2px solid #8a6d3b;
+    padding-bottom: 20px;
+  }
+  .header h1 {
+    color: #c9a961;
+    font-size: 1.6em;
+    letter-spacing: 1px;
+    margin: 0 0 8px;
+  }
+  .header p {
+    color: #a89f8c;
+    font-size: 0.9em;
+    line-height: 1.5;
+    margin: 4px 0;
+  }
+  .exhibit {
+    max-width: 1000px;
+    margin: 0 auto 60px;
+    border: 1px solid #4a4438;
+    background: #211f1a;
+    padding: 24px;
+  }
+  .exhibit-label {
+    color: #8a6d3b;
+    font-size: 0.75em;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .exhibit-title {
+    color: #d8d2c4;
+    font-size: 1.15em;
+    margin: 0 0 4px;
+  }
+  .exhibit-note {
+    color: #a89f8c;
+    font-size: 0.85em;
+    line-height: 1.5;
+    margin: 8px 0 18px;
+    border-left: 2px solid #8a6d3b;
+    padding-left: 12px;
+  }
+  .chart { width: 100%; height: 420px; }
+  .footer {
+    max-width: 1000px;
+    margin: 40px auto 0;
+    color: #6b6455;
+    font-size: 0.8em;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Gut-Check Review — Queries 105-121</h1>
+  <p>Visual verification pass for the recency-monetary funnel, frequency-monetary lockstep, and
+     the veer-off observation, run after the fact per standing practice: "anything consequential
+     that doesn't naturally produce a chart should still receive an intentional visual pass." These
+     are not new findings — every number here is already confirmed in the corresponding SQL query's
+     RESULT block. This exists as a second, visual line of verification before the findings were
+     built into Chapter Four's Tableau calculated fields.</p>
+</div>
+
+<div class="exhibit">
+  <div class="exhibit-label">Exhibit A — Queries 105 &amp; 112</div>
+  <div class="exhibit-title">Recency-Monetary Funnel: Average Spend by Recency Bucket (Gross vs Net)</div>
+  <div class="exhibit-note">Confirms the funnel holds for the typical customer in both gross and
+    net form, closely tracking one another. The 300-349 day bump (customer 12346's cancelled bulk
+    order, query 111) shows more clearly in gross than net.</div>
+  <div id="chart1" class="chart"></div>
+</div>
+
+<div class="exhibit">
+  <div class="exhibit-label">Exhibit B — Query 107</div>
+  <div class="exhibit-title">Frequency-Monetary Lockstep: Average Order Frequency by Recency Bucket</div>
+  <div class="exhibit-note">Same decay shape as the monetary funnel, confirming the lockstep
+    pattern. The 300-349 day bucket's bump reflects customer 17850 (query 109/113), a genuine
+    high-frequency lapsed customer, not an artifact.</div>
+  <div id="chart2" class="chart"></div>
+</div>
+
+<div class="exhibit">
+  <div class="exhibit-label">Exhibit C — Query 108</div>
+  <div class="exhibit-title">Frequency Spike Concentration by Monetary Decile</div>
+  <div class="exhibit-note">Revises Chapter Three's original "top ~15-20%" visual estimate — the
+    real spike is concentrated specifically in decile 10 (top 10% by spend), not a broader band.
+    Decile 8's outlier max (not shown here as an average) traced back to customer 17961, already
+    closed in Chapter Three (query 110).</div>
+  <div id="chart3" class="chart"></div>
+</div>
+
+<div class="exhibit">
+  <div class="exhibit-label">Exhibit D — Queries 106 &amp; 115</div>
+  <div class="exhibit-title">"Lapsed Whale" Population: Most-Lapsed Recency Quartile by Monetary Quartile (Gross vs Net)</div>
+  <div class="exhibit-note">The rightmost bar pair is the lapsed-whale population itself (highest
+    spend, most lapsed recency): 61 customers under gross, 59 under net — a 3% change. Confirms the
+    population size is stable even though individual customers' MAX values swing hard under
+    cancellation artifacts (Exhibit E).</div>
+  <div id="chart4" class="chart"></div>
+</div>
+
+<div class="exhibit">
+  <div class="exhibit-label">Exhibit E — Query 118</div>
+  <div class="exhibit-title">Cancelled-Order Distortion: Gross vs Net for the 7 Flagged Customers</div>
+  <div class="exhibit-note">Customer 13091 (query 119) is the one bar showing negative net —
+    traced to a likely duplicate-cancellation entry in the source data, not genuine return
+    behavior. The other 6 show the expected pattern: gross substantially overstates real spend.</div>
+  <div id="chart5" class="chart"></div>
+</div>
+
+<div class="exhibit">
+  <div class="exhibit-label">Exhibit F — Query 120</div>
+  <div class="exhibit-title">The Veer-Off Observation, Confirmed: Recency for the Top 20 Customers by Spend</div>
+  <div class="exhibit-note">Closes the Chapter Three veer-off observation. Every top-20 customer by
+    monetary_gross sits at 0-38 days recency except one — customer 12346 at 325 days, an order of
+    magnitude further out while still ranking in the same monetary tier. Same customer as Query 111's
+    cancelled-bulk-order finding, reached independently by two different paths.</div>
+  <div id="chart6" class="chart"></div>
+</div>
+
+<div class="exhibit">
+  <div class="exhibit-label">Exhibit G — Query 121</div>
+  <div class="exhibit-title">The Last Open Thread, Closed: 350-399 Day Bucket, Gross vs Net</div>
+  <div class="exhibit-note">The £65,500.07 figure first surfaced in Query 105 and left unresolved
+    through Query 114 traces to customer 16754 — 29 completed orders, 5 cancellations. Unlike the
+    single-cancellation artifacts (12346, 15749), this customer's gross/net gap is modest (16.5%),
+    consistent with ordinary cancellation activity across a real, substantial order history.
+    Confirmed genuine spend, not an artifact.</div>
+  <div id="chart7" class="chart"></div>
+</div>
+
+<div class="footer">
+  UK Online Retail II Forensics Project — Chapter Four Prep — cyberphase.consulting
+</div>
+
+<script>
+const paperBg = 'rgba(0,0,0,0)';
+const gridColor = '#3a352c';
+const fontColor = '#d8d2c4';
+const axisFont = {family: 'Courier New, monospace', color: fontColor, size: 12};
+const baseLayout = {
+  paper_bgcolor: paperBg,
+  plot_bgcolor: paperBg,
+  font: axisFont,
+  xaxis: {gridcolor: gridColor, zerolinecolor: gridColor},
+  yaxis: {gridcolor: gridColor, zerolinecolor: gridColor},
+  margin: {l: 70, r: 30, t: 20, b: 60},
+  legend: {orientation: 'h', y: -0.2}
+};
+
+const buckets = ['0-49','50-99','100-149','150-199','200-249','250-299','300-349',
+                  '350-399','400-449','450-499','500-549','550-599','600-649','650-699','700-749'];
+
+Plotly.newPlot('chart1', [
+  {x: buckets, y: [5544.9996269335759782,2027.0636215538847118,1883.5574516129032258,1459.2477302631578947,1253.2954878048780488,1164.1304484304932735,1888.5235526315789474,979.3825490196078431,767.5419662921348315,623.4987777777777778,716.0921052631578947,729.7166863905325444,749.6931159420289855,494.2485585585585586,260.8526136363636364],
+   type: 'scatter', mode: 'lines+markers', name: 'AVG monetary_gross', line: {color: '#c3564a', width: 2}},
+  {x: buckets, y: [5404.0839490445859873,1976.2283709273182957,1850.8615161290322581,1431.4595065789473684,1119.5567073170731707,1142.2054708520179372,1344.8758552631578947,927.6439215686274510,749.8248314606741573,610.1011111111111111,655.8457894736842105,704.2972189349112426,711.1869565217391304,490.9505405405405405,253.2900000000000000],
+   type: 'scatter', mode: 'lines+markers', name: 'AVG monetary_net', line: {color: '#4a7a96', width: 2}}
+], {...baseLayout, xaxis: {...baseLayout.xaxis, title: 'Recency bucket (days)'}, yaxis: {...baseLayout.yaxis, title: 'Avg monetary (£)'}});
+
+Plotly.newPlot('chart2', [
+  {x: buckets, y: [10.9485896269335760,5.1065162907268170,4.9096774193548387,4.3750000000000000,3.3455284552845528,2.8520179372197309,4.2828947368421053,2.7990196078431373,2.2808988764044944,2.2277777777777778,2.2456140350877193,1.7810650887573964,1.5507246376811594,1.3153153153153153,1.0568181818181818],
+   type: 'bar', marker: {color: '#5a8f6c'}, name: 'AVG frequency_completed'}
+], {...baseLayout, xaxis: {...baseLayout.xaxis, title: 'Recency bucket (days)'}, yaxis: {...baseLayout.yaxis, title: 'Avg frequency (orders)'}, showlegend: false});
+
+Plotly.newPlot('chart3', [
+  {x: ['1','2','3','4','5','6','7','8','9','10'],
+   y: [1.1194539249146758,1.3805460750853242,1.6564102564102564,2.2290598290598291,3.0307692307692308,3.7487179487179487,4.9094017094017094,7.3743589743589744,10.2598290598290598,26.8427350427350427],
+   type: 'bar', marker: {color: '#8a5a9c'}, name: 'AVG frequency_completed'}
+], {...baseLayout, xaxis: {...baseLayout.xaxis, title: 'Monetary decile (1=lowest spend, 10=highest)'}, yaxis: {...baseLayout.yaxis, title: 'Avg frequency (orders)'}, showlegend: false});
+
+Plotly.newPlot('chart4', [
+  {x: ['Q1 (lowest spend)','Q2','Q3','Q4 (highest = lapsed whales)'], y: [729,445,228,61],
+   type: 'bar', marker: {color: '#c3564a'}, name: 'Gross (query 106)'},
+  {x: ['Q1 (lowest spend)','Q2','Q3','Q4 (highest = lapsed whales)'], y: [734,440,230,59],
+   type: 'bar', marker: {color: '#4a7a96'}, name: 'Net (query 115)'}
+], {...baseLayout, xaxis: {...baseLayout.xaxis, title: 'Monetary quartile (within most-lapsed recency quartile)'}, yaxis: {...baseLayout.yaxis, title: 'Customer count'}});
+
+Plotly.newPlot('chart5', [
+  {x: ['12346','15749','12454','13091','16077','12607','14213'],
+   y: [77352.96,44534.30,16459.78,1108.80,2300.40,1579.51,1192.20],
+   type: 'bar', marker: {color: '#c3564a'}, name: 'Gross'},
+  {x: ['12346','15749','12454','13091','16077','12607','14213'],
+   y: [169.36,21535.90,4098.96,-1343.24,600.00,0.00,0.00],
+   type: 'bar', marker: {color: '#4a7a96'}, name: 'Net'}
+], {...baseLayout, xaxis: {...baseLayout.xaxis, title: 'Customer ID'}, yaxis: {...baseLayout.yaxis, title: 'Monetary value (£)'}});
+
+const top20Ids = ['18102','14646','14156','14911','17450','13694','17511','16684','12415','15061','15311','13089','16029','17949','12931','14298','15769','12346','13798','15838'];
+const top20Recency = [0,1,9,0,7,3,2,3,23,3,0,2,38,0,21,2,6,325,0,10];
+const top20Colors = top20Ids.map(id => id === '12346' ? '#c3564a' : '#6b6455');
+
+Plotly.newPlot('chart6', [
+  {x: top20Ids, y: top20Recency, type: 'bar', marker: {color: top20Colors}, name: 'Recency (days)'}
+], {...baseLayout, xaxis: {...baseLayout.xaxis, title: 'Customer ID (ranked by monetary_gross, highest first)'}, yaxis: {...baseLayout.yaxis, title: 'Recency (days)'}, showlegend: false});
+
+Plotly.newPlot('chart7', [
+  {x: ['16754 (target)','13564','15369','13958','17307'],
+   y: [65500.07,15880.22,6251.26,4709.23,3999.89],
+   type: 'bar', marker: {color: '#c3564a'}, name: 'Gross'},
+  {x: ['16754 (target)','13564','15369','13958','17307'],
+   y: [54692.82,15613.10,3346.43,4504.78,3378.31],
+   type: 'bar', marker: {color: '#4a7a96'}, name: 'Net'}
+], {...baseLayout, xaxis: {...baseLayout.xaxis, title: 'Customer ID (top 5 in 350-399 day bucket by gross)'}, yaxis: {...baseLayout.yaxis, title: 'Monetary value (£)'}});
+</script>
+
+</body>
+</html>

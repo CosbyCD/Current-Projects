@@ -1,7 +1,61 @@
-<div style="position: relative; width: 100%; height: 380px;">
-  <canvas id="ordersChart" role="img" aria-label="Scatter chart of customer 17961's order totals over time from December 2009 to November 2011, showing mostly small orders under 50 pounds with two large outlier orders near 200 and 500 pounds, and two small cancellation orders shown as negative values">Customer 17961 order history: mostly small orders under £50 across two years, with two large outliers (~£200 and ~£500) and two small cancellations.</canvas>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Customer 17961 — Order History</title>
+<style>
+  body {
+    margin: 0;
+    padding: 32px;
+    background: #14171c;
+    color: #ede8da;
+    font-family: 'Inter', -apple-system, sans-serif;
+  }
+  h1 {
+    font-family: 'Newsreader', Georgia, serif;
+    font-weight: 500;
+    font-size: 22px;
+    margin: 0 0 4px;
+  }
+  p.sub {
+    color: #cfc7ac;
+    font-size: 14px;
+    margin: 0 0 24px;
+  }
+  .chart-wrap {
+    position: relative;
+    width: 100%;
+    max-width: 900px;
+    height: 420px;
+    margin: 0 auto;
+  }
+  .legend {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    margin-top: 16px;
+    font-size: 13px;
+    color: #cfc7ac;
+  }
+  .legend span { display: flex; align-items: center; gap: 6px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+</style>
+</head>
+<body>
+<h1>Customer 17961 — order history</h1>
+<p class="sub">Order totals over time, Dec 2009 &ndash; Nov 2011. Resolved as a small retailer with a recurring seasonal restocking pattern, not a data quality issue.</p>
+<div class="chart-wrap">
+  <canvas id="ordersChart" role="img" aria-label="Scatter chart of customer 17961's order totals over time from December 2009 to November 2011, showing mostly small orders under 50 pounds with two large outlier orders near 200 and 500 pounds, and two small cancellation orders shown as negative values"></canvas>
 </div>
+<div class="legend">
+  <span><span class="dot" style="background:#2a78d6;"></span>Order total</span>
+  <span><span class="dot" style="background:#e34948;"></span>Cancellation</span>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-adapter-moment/1.0.1/chartjs-adapter-moment.min.js"></script>
 <script>
 const rows = [
 ["489606","2009-12-01",2.10],["490312","2009-12-04",6.30],["490312","2009-12-04",5.04],["490312","2009-12-04",1.60],["490312","2009-12-04",2.10],["490312","2009-12-04",1.45],["490312","2009-12-04",10.20],["490312","2009-12-04",6.30],["490312","2009-12-04",1.25],["490312","2009-12-04",1.25],["490312","2009-12-04",5.95],["490312","2009-12-04",5.95],["490312","2009-12-04",1.45],["490312","2009-12-04",2.95],["490312","2009-12-04",2.95],["490312","2009-12-04",7.80],["490312","2009-12-04",16.50],["490312","2009-12-04",8.25],["490312","2009-12-04",7.65],["490312","2009-12-04",4.25],["490312","2009-12-04",4.25],["490312","2009-12-04",7.65],["490312","2009-12-04",7.56],["490312","2009-12-04",1.25],["490312","2009-12-04",1.25],["490312","2009-12-04",29.50],["490312","2009-12-04",5.95],["490312","2009-12-04",14.85],["490312","2009-12-04",19.80],["490312","2009-12-04",2.10],["490312","2009-12-04",3.25],["490312","2009-12-04",3.25],["490312","2009-12-04",3.25],["490312","2009-12-04",1.45],["490312","2009-12-04",3.75],["490312","2009-12-04",6.30],["490312","2009-12-04",2.50],["490312","2009-12-04",5.10],["490312","2009-12-04",5.10],["490312","2009-12-04",7.50],["490312","2009-12-04",5.10],["490312","2009-12-04",2.95],["490312","2009-12-04",5.90],["490312","2009-12-04",10.08],["490312","2009-12-04",1.05],["490312","2009-12-04",6.30],["490312","2009-12-04",6.25],["490312","2009-12-04",3.75],["490312","2009-12-04",3.75],["490312","2009-12-04",3.75],["490312","2009-12-04",1.25],["490312","2009-12-04",1.25],["490312","2009-12-04",1.25],["490312","2009-12-04",3.75],["490312","2009-12-04",2.50],["490312","2009-12-04",2.50],["490312","2009-12-04",1.45],["490312","2009-12-04",7.65],["490312","2009-12-04",1.65],["490312","2009-12-04",3.30],["490312","2009-12-04",7.95],["490312","2009-12-04",7.95],
@@ -125,12 +179,12 @@ new Chart(document.getElementById('ordersChart'), {
     responsive: true,
     maintainAspectRatio: false,
     scales: {
-      x: { type: 'time', time: { unit: 'month' }, ticks: { font: { size: 10 } } },
-      y: { title: { display: true, text: 'Order total (£)' } }
+      x: { type: 'time', time: { unit: 'month' }, ticks: { color: '#cfc7ac', font: { size: 10 } }, grid: { color: 'rgba(237,232,218,0.08)' } },
+      y: { title: { display: true, text: 'Order total (£)', color: '#cfc7ac' }, ticks: { color: '#cfc7ac' }, grid: { color: 'rgba(237,232,218,0.08)' } }
     },
-    plugins: { legend: { display: true, position: 'top' } }
+    plugins: { legend: { display: false } }
   }
 });
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-adapter-moment/1.0.1/chartjs-adapter-moment.min.js"></script>
+</body>
+</html>
