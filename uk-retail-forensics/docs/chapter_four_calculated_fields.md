@@ -61,16 +61,16 @@ IF ISNULL([Frequency Completed]) AND ISNULL([Monetary Gross]) THEN "Never Conver
 
 ## Field 4: Recency-Monetary Tier (Rev. Q105/106/122)
 
-**WHAT:** Three-way tier classifying customers as "Recent," "Lapsed, Typical," or "Lapsed Whale" — encoding the revised funnel finding (average spend declines with recency, but a real population of high-value dormant customers exists) rather than Chapter Three's original absolute claim.
+**WHAT:** Four-way tier classifying customers as "Never Converted," "Recent," "Lapsed, Typical," or "Lapsed Whale" — encoding the revised funnel finding (average spend declines with recency, but a real population of high-value dormant customers exists) rather than Chapter Three's original absolute claim.
 
-**WHY:** A simple recency cutoff alone would misrepresent the finding. This field requires two conditions to correctly separate the typical-customer pattern from the confirmed exception population. Field name cites the queries that established both the finding (105/106) and the corrected thresholds (122), per this project's citation standard.
+**WHY:** A simple recency cutoff alone would misrepresent the finding. This field requires two conditions to correctly separate the typical-customer pattern from the confirmed exception population, plus an explicit null check so customers with no spend data are labeled honestly rather than silently miscategorized. Field name cites the queries that established both the finding (105/106) and the corrected thresholds (122), per this project's citation standard.
 
 **Threshold history (see investigation log for full account):**
 - Recency threshold: originally guessed at 400 days; corrected to **377 days** via Query 123 (the actual boundary of the most-lapsed recency quartile).
 - Monetary threshold: originally guessed at £5,000; corrected to **£2,180.28** via Query 122 (the actual boundary of the confirmed lapsed-whale population).
 - A discrepancy between the NTILE-based population count (59, Queries 106/115) and this field's fixed-threshold count (58) was investigated in Queries 124–127 and traced to non-deterministic tie-breaking in PostgreSQL's `NTILE` function. The 58-count fixed-threshold definition was adopted as the standard for this field — see Query 127's Confirmed Finding for the full account.
 
-**Formula:**
+**Formula (original, three-way):**
 ```
 IF [Recency Days] <= 377 THEN "Recent"
 ELSEIF [Recency Days] > 377 AND ROUND([Spend (Net)], 2) >= 2180.28 THEN "Lapsed Whale"
@@ -78,9 +78,55 @@ ELSE "Lapsed, Typical"
 END
 ```
 
-**Verification:** Filtered to "Lapsed Whale" only, counted distinct Customer Id.
+**Verification (original):** Filtered to "Lapsed Whale" only, counted distinct Customer Id.
 
-**Result:** ✅ Passed — **58** customers, matching the corrected fixed-threshold definition (Query 126) after the NTILE non-determinism was identified and resolved (Query 127). Does not match the original NTILE-based 59-count from Queries 106/115 — this is expected and documented, not an error. Re-verified via clean rebuild: 58 Lapsed Whale / 1,409 Lapsed, Typical / 4,408 Recent (5,875 total).
+**Result (original):** ✅ Passed — **58** customers, matching the corrected fixed-threshold definition (Query 126) after the NTILE non-determinism was identified and resolved (Query 127). Does not match the original NTILE-based 59-count from Queries 106/115 — this is expected and documented, not an error. Re-verified via clean rebuild: 58 Lapsed Whale / 1,409 Lapsed, Typical / 4,408 Recent (5,875 total).
+
+**[REVISION — corrected by Query 130 (never_converted_tier_leakage_check), run July 19, 2026]**
+
+Building a dedicated 3D exhibit for "Lapsed, Typical" surfaced a 22-customer count mismatch (1,387 expected vs. 1,409 shown). Query 130 confirmed the cause: `Spend (Net)` is NULL for the 23 never-converted customers (Query 98), and Tableau's `ELSEIF` silently evaluates a NULL comparison as false rather than erroring — so all 23 were falling through to "Recent" (1 customer) or "Lapsed, Typical" (22 customers) undetected, with no indication anything was wrong.
+
+**Corrected formula:**
+```
+IF ISNULL([Spend (Net)]) THEN "Never Converted"
+ELSEIF [Recency Days] <= 377 THEN "Recent"
+ELSEIF [Recency Days] > 377 AND ROUND([Spend (Net)], 2) >= 2180.28 THEN "Lapsed Whale"
+ELSE "Lapsed, Typical"
+END
+```
+
+**Verification (post-fix):** Full four-way breakdown, no filter.
+
+**Result (post-fix):** ✅ Passed — **23 Never Converted / 4,407 Recent / 1,387 Lapsed, Typical / 58 Lapsed Whale**, summing correctly to 5,875. The Lapsed Whale count (58) was unaffected by this bug, since none of the 23 never-converted customers could ever satisfy the whale threshold — the leakage was confined to the Recent/Lapsed-Typical boundary.
+
+---
+
+## Field 6: Exhibit URL (Funnel Tier)
+
+**WHAT:** Routes each of the four `Recency-Monetary Tier` values to its corresponding drill-down exhibit filename, for use in the Chapter Four dashboard's "Go to URL" mark-click action.
+
+**WHY:** The dashboard's URL action needs a field that resolves to an actual filename at click-time. Built after an initial mapping mistake (the "Lapsed Whale" drill-down was first pointed at the 2D `gutcheck_105_121_funnel_lockstep_review.html` verification summary instead of a genuine 3D exhibit — caught on first test click and corrected). Three dedicated exhibits (`lapsed_whale_isolated_3d.html`, `lapsed_typical_isolated_3d.html`, `recent_isolated_3d.html`) were built from the corrected tier populations to fulfill the original Chapter Four design intent of purpose-built 3D deep-dives rather than reused general charts.
+
+**Formula:**
+```
+IF ISNULL([Spend (Net)]) THEN "uk_retail_rfm_3d_log.html"
+ELSEIF [Recency-Monetary Tier (Rev. Q105/106/122)] = "Lapsed Whale"
+THEN "lapsed_whale_isolated_3d.html"
+ELSEIF [Recency-Monetary Tier (Rev. Q105/106/122)] = "Lapsed, Typical"
+THEN "lapsed_typical_isolated_3d.html"
+ELSE "uk_retail_rfm_3d_log.html"
+END
+```
+
+**Verification:** `Recency-Monetary Tier` and `Exhibit URL (Funnel Tier)` placed side by side on Rows, no filter — confirmed all four tiers resolve to the correct filename:
+- Never Converted → `uk_retail_rfm_3d_log.html`
+- Recent → `uk_retail_rfm_3d_log.html`
+- Lapsed, Typical → `lapsed_typical_isolated_3d.html`
+- Lapsed Whale → `lapsed_whale_isolated_3d.html`
+
+**Result:** ✅ Passed. Live end-to-end test on the actual dashboard confirmed clicking each bar opens the correct exhibit in a new browser tab.
+
+**Note on Never Converted and Recent sharing a target:** both currently route to the general RFM cube as a reasonable default. A dedicated exhibit for the 23-customer Never Converted group was judged unnecessary given its small size — open for reconsideration, see investigation log Open Items.
 
 ---
 
@@ -105,9 +151,11 @@ IF ROUND([Spend (Net)], 2) >= 5224.45 THEN "Top Decile (Spike Zone)" ELSE "Below
 
 ---
 
-## Fields Not Yet Built
+## Status
 
-Per the Chapter Four plan, still to come: dashboard layout, mark-click (Select) URL actions wiring each confirmed bucket to its corresponding 3D Plotly exhibit, and the Current/Historical page structure.
+**Built and verified:** all six calculated fields above, dashboard layout (Funnel Tier Overview, Frequency Spike Overview, plus Nov 2010 Cohort and Never Converted breakdowns), and mark-click (Select) URL actions wiring each `Recency-Monetary Tier` value to its corresponding 3D exhibit — confirmed working end-to-end on the live dashboard.
+
+**Not yet built:** the Current/Historical page structure, and an equivalent drill-down wiring for `Frequency Spike Tier` (currently only `Recency-Monetary Tier` has exhibit routing).
 
 ---
 

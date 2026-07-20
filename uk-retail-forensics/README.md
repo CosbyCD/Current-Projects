@@ -1,40 +1,44 @@
 # UK Online Retail II — A Forensics Approach to Customer Behavior Analysis
 
-A self-directed, end-to-end analysis of 1,067,371 UK e-commerce transactions (Dec 2009 – Dec 2011), built as a forensic "chain of custody" investigation rather than a standard cleaning-and-charting exercise. Every cleaning decision, every derived field, and every visual finding is documented and independently verified before being called a result.
+*Want the full investigation instead of the summary? [Start here →](docs/investigation_log.md)*
+
+A self-directed forensic analysis of 1,067,371 UK e-commerce transactions (Dec 2009 – Dec 2011), testing one question: **does a fully rotatable 3D visualization surface customer patterns that a flat chart hides?** Built end-to-end — cleaning, six derived behavioral fields, an interactive 3D exhibit gallery, and a Tableau dashboard — with every finding checked against SQL before it's trusted, and every mistake documented rather than quietly fixed.
 
 **Project window:** July 6 – July 26, 2026 (20 days, four chapters)
 
-## The question this project tests
+## The headline findings
 
-Does a fully rotatable, interactive 3D visualization surface relationships in customer data that a flat table or standard 2D chart cannot — and where does it fall short?
+- **Recency-monetary funnel, confirmed and refined.** Average spend does decline steadily the longer a customer's been dormant — but a real population of 58 high-value customers breaks that pattern entirely. [See it in 3D →](https://cosbycd.github.io/Current-Projects/uk-retail-forensics/3dplots/lapsed_whale_isolated_3d.html)
+- **A seasonal cohort, hiding in a "gap."** What first looked like a data anomaly in the recency distribution turned out to be 618 real customers stocking up ahead of Christmas 2010 — a genuine acquisition wave, not noise.
+- **Gross revenue lies about individual customers.** At least 7 customers looked like major spenders using standard revenue figures — until their cancelled orders were factored in. One customer's apparent £77,000 in spend was really £169. This changed which spend metric the entire dashboard is built on.
+- **The frequency spike is real, but narrower than it first looked.** Chart rotation suggested high-frequency buying concentrated in the "top 15-20%" of spenders. SQL confirmed it's actually the top 10% specifically — a meaningfully different targeting boundary.
 
-## Explore it
+## The part most portfolios don't show you
 
-- **[Investigation log](docs/investigation_log.md)** — the full narrative: every cleaning decision, every derived field, every finding, with the reasoning behind each one
-- **[Chapter Four calculated fields](docs/chapter_four_calculated_fields.md)** — every Tableau calculated field built for the dashboard: formula, reasoning, threshold history, and a double verification pass for each
-- **[3D exhibit gallery](https://cosbycd.github.io/Current-Projects/uk-retail-forensics/3dplots/)** — rotatable, interactive charts, live in the browser
-- **[SQL queries](sql/)** — 125+ numbered queries, each with a WHAT/WHY comment block explaining the reasoning, not just the code
+Midway through building the Tableau dashboard, a population count came back **58 instead of the expected 59** — a one-customer gap. Rather than shrug it off, that gap got traced all the way down to a real bug in PostgreSQL's `NTILE` function (non-deterministic tie-breaking with no secondary sort key), fixed, and documented with the exact customer who exposed it. Nothing was rerun quietly to make the discrepancy disappear — the original numbers stay in the record, with a note explaining exactly what changed and why. [Full account →](docs/investigation_log.md#discovering-ntile-non-determinism--queries-122-127)
+
+## Status
+
+**Chapters 1-3: closed.** Data cleaned and reconciled, six behavioral fields derived and verified, 14+ interactive 3D exhibits built.
+
+**Chapter 4: in progress.** Live Tableau dashboard connected to PostgreSQL, six calculated fields built and independently verified twice each, mark-click drill-downs wired from dashboard charts to dedicated 3D exhibits. Remaining: Current/Historical page structure, formal business-recommendations write-up (intentionally held until a planned inventory/MRP sprint completes, so recommendations cover the full finding set at once).
+
+## Explore further
+
+- **[Full investigation log](docs/investigation_log.md)** — every decision, every query, every correction, in order
+- **[3D exhibit gallery](https://cosbycd.github.io/Current-Projects/uk-retail-forensics/3dplots/)** — rotate the charts yourself
+- **[Chapter Four calculated fields](docs/chapter_four_calculated_fields.md)** — the dashboard logic, formula by formula
+- **[SQL queries](sql/)** — 130 numbered files, each with what it does and why
 - **[Query outputs](output/)** — the raw results behind every query
 
-## Structure
-
-**Chapter One — Investigation & cleaning.** 1,067,371 raw rows down to a verified `clean_transactions` table: duplicates, administrative codes, casing inconsistencies, and one confirmed data-entry error, each traced and documented rather than silently dropped.
-
-**Chapter Two — Deriving six customer behavior fields.** Recency, frequency, monetary value, order-to-order interval, product diversity, and return rate — extracted from data already present in the raw columns, not sourced externally.
-
-**Chapter Three — 3D visualization.** A rotatable, interactive customer-behavior cube, tested against real findings and checked line-by-line against SQL. Four confirmed findings: a recency-monetary funnel, a frequency-monetary lockstep, a 618-customer seasonal stocking cohort, and one resolved customer-level anomaly. *Both headline findings were later run through a dedicated SQL verification pass (see the investigation log) and held directionally, but neither survived as an absolute claim — the funnel governs the typical customer but not a real high-value dormant tail, and the frequency spike is concentrated in the top decile by spend, not the originally estimated top 15-20%.*
-
-**Chapter Four — Tableau + drill-down architecture** *(in progress).* A production dashboard layer with bucketed, hypothesis-driven drill-downs from 2D KPIs into purpose-built 3D deep-dives. Live PostgreSQL connection established in Tableau Desktop Professional; five calculated fields built and independently verified twice each against the SQL investigation — see [Chapter Four calculated fields](docs/chapter_four_calculated_fields.md). Dashboard layout and drill-down wiring not yet built.
-
 ## Standing project rules
-
-A few habits carried through the whole investigation, documented in full in the log:
 
 - Nothing gets deleted — inconvenient or anomalous data is segregated and preserved, never dropped silently
 - When a genuine methodological fork comes up, both versions get built and compared, not just the first one that works
 - When two independently-derived queries disagree on what should be the same result, the fix is to find the accidental second definition and remove it — not to average or reconcile the discrepancy
 - Nothing gets called a finding on the strength of a chart alone — every visual pattern gets a SQL or statistical check before it's written up
+- When a documented finding is later revised, the original entry stays and gets an appended notation — citing exactly what changed it, why, and the full corrected statement — never a silent edit
 
-## About
+---
 
 Built by [Cherrie Cosby](https://cyberphase.consulting) as a demonstration of applied data analysis rigor — AI-assisted tool-chaining used to run more verification passes than would be possible solo, not to skip them.

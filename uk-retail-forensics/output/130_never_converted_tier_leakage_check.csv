@@ -1,0 +1,3 @@
+"tableau_fallthrough_tier","customer_count"
+"Recency <= 377 (falls to Recent)",1
+"Recency > 377 (falls to Lapsed, Typical)",22
