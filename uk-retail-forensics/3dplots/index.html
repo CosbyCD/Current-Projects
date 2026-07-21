@@ -218,9 +218,9 @@
 
   <header>
     <a class="back-link" href="../README.md">&larr; Back to project overview</a>
-    <p class="case-tag">Case File — UK Online Retail II · Chapter Three</p>
+    <p class="case-tag">Case File — UK Online Retail II · Chapters Three &amp; Four</p>
     <h1>Does a fully rotatable, interactive visualization change what you find?</h1>
-    <p class="thesis">Fourteen exhibits from a documented forensic analysis of 5,852 customers — each one built, rotated, and cross-checked against SQL before being called a finding.</p>
+    <p class="thesis">Twenty exhibits from a documented forensic analysis of 5,852 customers — each one built, rotated, and cross-checked against SQL before being called a finding.</p>
     <div class="meta-row">
       <div>Investigator: <span>Cherrie Cosby</span></div>
       <div>Opened: <span>Jul 6, 2026</span></div>
@@ -299,7 +299,7 @@
     </div>
 
     <div class="exhibit">
-      <div class="exhibit-number">Q99</div>
+      <div class="exhibit-number">Q99<small>Distribution</small></div>
       <div>
         <p class="exhibit-title">Recency distribution — 25-day bins</p>
         <p class="exhibit-desc">The SQL check that ruled out a false gap and found a real one instead: a genuine spike at 350–424 days, later traced to a November 2010 pre-Christmas stocking cohort.</p>
@@ -317,7 +317,7 @@
     </div>
 
     <div class="exhibit">
-      <div class="exhibit-number">Q102</div>
+      <div class="exhibit-number">Q102<small>Case review</small></div>
       <div>
         <p class="exhibit-title">Customer 17961 — order history</p>
         <p class="exhibit-desc">An anomalously low average order value, traced order-by-order to a small retailer restocking in modest increments year-round, then bulking up ahead of Christmas.</p>
@@ -326,7 +326,7 @@
     </div>
 
     <div class="exhibit">
-      <div class="exhibit-number">Q103</div>
+      <div class="exhibit-number">Q103<small>Orientation</small></div>
       <div>
         <p class="exhibit-title">Correlation heatmap — all eleven fields</p>
         <p class="exhibit-desc">A fast orientation pass across every derived field. Surfaced two genuinely identical pairs and flagged the trio worth building into a cube.</p>
@@ -344,7 +344,7 @@
     </div>
 
     <div class="exhibit">
-      <div class="exhibit-number">Q104</div>
+      <div class="exhibit-number">Q104<small>Recolored</small></div>
       <div>
         <p class="exhibit-title">Cube — recolored, the wave and the spray</p>
         <p class="exhibit-desc">Two distinct structures, separated by color. The "spray" turned out to be a statistical artifact of low order counts, not a true customer cluster — see the investigation log for the full write-up.</p>
@@ -359,6 +359,60 @@
         <p class="exhibit-desc">A post-close pass running the recency-monetary funnel and frequency-monetary lockstep through SQL for the first time, closing every open thread including the veer-off observation and the last unresolved monetary spike. Both headline findings held directionally but were revised in their specifics — including a discovery that gross spend overstated real customer value for at least 7 customers due to cancelled bulk orders.</p>
       </div>
       <a class="exhibit-link" href="gutcheck_105_121_funnel_lockstep_review.html" target="_blank" rel="noopener">Open exhibit ↗</a>
+    </div>
+
+    <div class="exhibit">
+      <div class="exhibit-number">Q129<small>Isolated</small></div>
+      <div>
+        <p class="exhibit-title">Lapsed Whale — isolated 3D</p>
+        <p class="exhibit-desc">The 58-customer Lapsed Whale population (recency &gt; 377 days, monetary_net ≥ £2,180.28) isolated against the full 5,852-customer field, colored on a log-scaled gradient by net spend — a log transform specifically to counter the population's right-skewed distribution, which compressed all but the top few points into one shade under linear scaling. Built as the drill-down target for Tableau's Funnel Tier Overview chart. <em>First mapped in error to the Q105–121 gut-check summary — a static 2D file, not a 3D exhibit — caught on the first test click and corrected before this file was built.</em></p>
+      </div>
+      <a class="exhibit-link" href="lapsed_whale_isolated_3d.html" target="_blank" rel="noopener">Open exhibit ↗</a>
+    </div>
+
+    <div class="exhibit">
+      <div class="exhibit-number">Q130<small>Isolated</small></div>
+      <div>
+        <p class="exhibit-title">Lapsed, Typical — isolated 3D</p>
+        <p class="exhibit-desc">The 1,387-customer "Lapsed, Typical" population, isolated with the same gray-population, log-scaled treatment as the whale exhibit. <em>Built after Query 130 (never_converted_tier_leakage_check) traced a 22-customer count mismatch to a NULL-handling gap in the Tableau tier field — the 23 never-converted customers were silently falling into this bucket instead of getting their own category. Corrected field re-verified at 23 Never Converted / 4,407 Recent / 1,387 Lapsed, Typical / 58 Lapsed Whale.</em></p>
+      </div>
+      <a class="exhibit-link" href="lapsed_typical_isolated_3d.html" target="_blank" rel="noopener">Open exhibit ↗</a>
+    </div>
+
+    <div class="exhibit">
+      <div class="exhibit-number">Q130<small>Isolated</small></div>
+      <div>
+        <p class="exhibit-title">Recent — isolated 3D</p>
+        <p class="exhibit-desc">The 4,407-customer "Recent" population (recency ≤ 377 days), isolated using the tier logic corrected in Query 130. Completes the three-way drill-down set wired to Tableau's Funnel Tier Overview chart. <em>These three isolated exhibits use a white background rather than this gallery's dark case-file styling, at the author's request — the dark palette compressed perceptual differences at the low end of the log-scaled color gradient on the whale exhibit's first draft.</em></p>
+      </div>
+      <a class="exhibit-link" href="recent_isolated_3d.html" target="_blank" rel="noopener">Open exhibit ↗</a>
+    </div>
+
+    <div class="exhibit">
+      <div class="exhibit-number">Q131–134<small>Isolated</small></div>
+      <div>
+        <p class="exhibit-title">Never Converted — isolated 3D</p>
+        <p class="exhibit-desc">The 23-customer Never Converted population (no completed orders, ever) plotted against a corrected full-range population sample on Recency × First Transaction Date × Attempt Count (log-scaled). <em>First build (Query 133) used a population sample accidentally truncated to a 14-day recency window — caught, preserved rather than deleted, and superseded by this corrected version (Query 134), which confirmed full 0–737 day coverage before being trusted.</em></p>
+      </div>
+      <a class="exhibit-link" href="never_converted_isolated_3d.html" target="_blank" rel="noopener">Open exhibit ↗</a>
+    </div>
+
+    <div class="exhibit">
+      <div class="exhibit-number">Q131<small>Colored — Date</small></div>
+      <div>
+        <p class="exhibit-title">Never Converted — colored by first transaction date</p>
+        <p class="exhibit-desc">Same population as above, with the full backdrop colored by first-touch date rather than gray. Makes Query 131's headline finding visible directly in the shape of the data: 65% of the 23 never-converted customers first touched the platform in a three-week window (Dec 1–22, 2009), sitting at the oldest edge of the population's cohort gradient.</p>
+      </div>
+      <a class="exhibit-link" href="never_converted_colored_by_date.html" target="_blank" rel="noopener">Open exhibit ↗</a>
+    </div>
+
+    <div class="exhibit">
+      <div class="exhibit-number">Q135–136<small>Colored — Attempts</small></div>
+      <div>
+        <p class="exhibit-title">Never Converted — colored by attempt count</p>
+        <p class="exhibit-desc">Same population, backdrop colored by order-attempt count (log-scaled). This exhibit prompted a real, SQL-confirmed finding — attempt count is tenure-driven, not random (Query 135) — and then produced a wrong specific reading of its own: a rotation appeared to show the high-attempt population peaking at 250–350 days recency; Query 136 checked this directly and found it was actually 94% concentrated under 100 days, a misread of several hundred days caused by overplotting at a dense viewing angle. <em>Kept in the gallery deliberately, correction included, as the clearest example in this project of the standing rule earning its keep: a rotation can be trusted to flag something worth checking, not to report its own specifics correctly.</em></p>
+      </div>
+      <a class="exhibit-link" href="never_converted_colored_by_attempts.html" target="_blank" rel="noopener">Open exhibit ↗</a>
     </div>
 
   </div>

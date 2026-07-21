@@ -17,11 +17,13 @@ A self-directed forensic analysis of 1,067,371 UK e-commerce transactions (Dec 2
 
 Midway through building the Tableau dashboard, a population count came back **58 instead of the expected 59** — a one-customer gap. Rather than shrug it off, that gap got traced all the way down to a real bug in PostgreSQL's `NTILE` function (non-deterministic tie-breaking with no secondary sort key), fixed, and documented with the exact customer who exposed it. Nothing was rerun quietly to make the discrepancy disappear — the original numbers stay in the record, with a note explaining exactly what changed and why. [Full account →](docs/investigation_log.md#discovering-ntile-non-determinism--queries-122-127)
 
+**A second one: this project ran one investigation thread backwards on purpose, to test itself.** The never-converted customer analysis (queries 131-135) was worked visual-first — rotate the 3D exhibit, spot a candidate shape, confirm or kill it in SQL — instead of the efficient SQL-first order everything else in this project follows. That's not a workflow mistake; it's the actual experiment this project set out to run: does 3D rotation earn a place in the analytical toolkit, or not? Result: rotation reliably flagged two real findings (a launch-window abandonment cohort; a tenure effect where attempt count tracks how long a customer has been in the dataset) that SQL then confirmed — but it also introduced its own failure modes a SQL-first pass never would have hit, including a badly biased population sample that got caught, labeled, and superseded rather than quietly fixed. It's a fair trade to name plainly: visuals are a strong hypothesis-generation layer on top of disciplined SQL, not a replacement for it. [Full account →](docs/investigation_log.md#building-the-never-converted-exhibit--queries-131-135)
+
 ## Status
 
-**Chapters 1-3: closed.** Data cleaned and reconciled, six behavioral fields derived and verified, 14+ interactive 3D exhibits built.
+**Chapters 1-3: closed.** Data cleaned and reconciled, six behavioral fields derived and verified, 14 interactive 3D exhibits built.
 
-**Chapter 4: in progress.** Live Tableau dashboard connected to PostgreSQL, six calculated fields built and independently verified twice each, mark-click drill-downs wired from dashboard charts to dedicated 3D exhibits. Remaining: Current/Historical page structure, formal business-recommendations write-up (intentionally held until a planned inventory/MRP sprint completes, so recommendations cover the full finding set at once).
+**Chapter 4: in progress.** Live Tableau dashboard connected to PostgreSQL, six calculated fields built and independently verified twice each, mark-click drill-downs wired from dashboard charts to dedicated 3D exhibits — including 3 new isolated-population exhibits (Lapsed Whale, Lapsed Typical, Recent) built specifically as drill-down targets. Remaining: Current/Historical page structure, formal business-recommendations write-up (intentionally held until a planned inventory/MRP sprint completes, so recommendations cover the full finding set at once).
 
 ## Explore further
 

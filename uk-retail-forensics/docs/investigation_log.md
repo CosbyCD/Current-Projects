@@ -674,20 +674,217 @@ END
 
 ---
 
+### Building the Never Converted Exhibit — Queries 131-135
+
+Revisits Open Item 4 below (never-converted dedicated exhibit, previously judged
+unnecessary given population size). Deliberately run visual-first rather than
+SQL-first — see the methodology note at the end of this section for why.
+
+**131** — `131_never_converted_time_axis_check.sql`. Tested time-based fields
+(`first_transaction_date`, `active_span_days`) as a third exhibit axis, since
+`monetary_net` is NULL for the entire never-converted group by definition (the
+same NULL that caused the Query 130 tier-leakage bug) and is not usable.
+**Result:** 15 of 23 never-converted customers (65%) made their sole transaction
+attempt within the dataset's first three weeks (Dec 1-22, 2009); the remaining 8
+are isolated single-attempt cancellations scattered through 2010 with no further
+clustering. `frequency_completed` and `active_span_days` are both degenerate for
+this group (NULL/0 for all but one customer, customer 15767) and are not viable
+axes. **Confirmed finding:** the never-converted group reads as an early-platform
+abandonment cohort plus a thin unclustered tail, not steady-state churn.
+`first_transaction_date` is the only field carrying real separating signal.
+
+**132** — `132_never_converted_attempt_count_pull.sql`. Pulled a raw attempt
+count (completed + cancelled invoices combined) to replace `frequency_completed`,
+which excludes this group by definition. **Result:** 21 of 23 customers (91%)
+made exactly one attempt, ever; only two (15767, 17632) made two attempts, none
+made three or more. **Confirmed finding:** the group is overwhelmingly
+single-attempt, not just zero-completed-orders — two distinct failure modes
+(launch-window abandonment; scattered one-off tail), both single-shot.
+`attempt_count` confirmed as a usable, non-degenerate (values 1-2) axis.
+
+**133** — `133_never_converted_exhibit_data_pull.sql`. Consolidated Queries 131
+and 132 into a single source-of-truth pull (`recency_days`,
+`first_transaction_date`, `attempt_count`, boolean never-converted flag) for
+exhibit construction. Data-shaping query, not a new finding.
+
+**First exhibit build, and a real sampling bug.** The Query 133 result set was
+pasted into the working session and truncated at 977 rows. Because the source
+query was ordered by `recency_days` ascending, the truncation wasn't random —
+every one of the 977 rows fell between `recency_days` 0 and 14, nowhere near the
+never-converted group's actual range (371-738). The resulting exhibit
+(`never_converted_signal_check_partial_sample.html`) understated the population's
+spread and made the never-converted cluster look isolated in empty space for the
+wrong reason. Caught by inspection, not by a formal check — worth noting as a
+category of error a SQL-first workflow is less likely to produce, since it's
+specific to how much of a result set survives being pasted into a chat interface.
+Preserved under an honest filename with a superseded-by note rather than deleted,
+per this project's segregate-don't-delete standard.
+
+**134** — `134_never_converted_full_range_sample.sql`. Fixed the sampling method
+itself: a systematic 1-in-9 pull ordered by `customer_id` (uncorrelated with
+recency) rather than by the axis being plotted, guaranteeing full-range coverage
+regardless of where a paste gets cut off. **Result:** 650 rows, confirmed
+spanning `recency_days` 0-737 (vs. the flawed pull's 0-14), with a natural
+concentration at the low end (304 of 650 rows under 100 days) reflecting the
+population's real shape rather than a sampling artifact. Rebuilt as
+`never_converted_isolated_3d.html` — the corrected base exhibit.
+
+**Three colored variants** were built on top of the corrected base to test
+whether the population's attempt-count layering (a striation effect produced by
+the log-scaled Z axis rendering each integer attempt count as its own plane)
+carried further structure:
+- **Colored by `first_transaction_date`** (`never_converted_colored_by_date.html`):
+  population forms a visible cohort gradient, recent (green) to old (purple).
+  The 23 never-converted customers sit at the oldest edge of that gradient —
+  consistent with, not additional to, Query 131's finding.
+- **Colored by `attempt_count`**, log-scaled color mapping matching the log Z
+  axis (`never_converted_colored_by_attempts.html`) — a linear color scale
+  first collapsed nearly the whole population into one shade given the 1-466
+  range; fixed the same way the Z-axis skew was handled. Surfaced a visible
+  concentration of high-attempt customers around 500-700 days recency,
+  concentrated in early (2009-2010) first-transaction cohorts by color.
+  Flagged as chart-rotation-only pending SQL confirmation.
+- **Colored by `recency_days`** (`never_converted_colored_by_recency.html`):
+  no additional structure beyond what the other two variants already show.
+
+**135** — `135_attempt_count_by_cohort_check.sql`. SQL-confirmed the high-attempt
+tower observed in the colored-by-attempts rotation, by grouping all 5,875
+customers into first-transaction quarterly cohorts and comparing mean, median,
+and max `attempt_count` per cohort. **Result:** median attempt_count declines
+nearly monotonically across cohorts — 10 (Q4 2009, n=1,040) → 6 → 4 → 3 → 2 → 2
+→ 2 → 2 → 1 (Q4 2011, n=440) — with the average-to-median ratio staying roughly
+constant (~1.3-2x) across all nine quarters rather than widening in the earliest
+one. **Confirmed finding:** the tower is real and population-wide, not an
+artifact of a small number of outliers like the 466-attempt customer — the
+effect holds at the median across 1,000+ customers in the earliest cohort, not
+just in the mean. `attempt_count` accumulation is substantially tenure-driven:
+customers who joined earlier have simply had more calendar time to generate
+attempts (completed and cancelled combined), independent of whether they ever
+converted. Candidate for its own dedicated Chapter Four exhibit, separate from
+the never-converted lineup, once that set is finalized.
+
+**136** — `136_high_attempt_recency_distribution_check.sql`. A second rotation
+of the colored-by-attempts exhibit (side angle, log Z axis facing the viewer)
+appeared to show the high-attempt "tower" peaking around 250-350 days recency,
+not at the 500-700 day range the Query 135 cohort-median trend might suggest.
+Rather than accept either reading, this query pulled the actual recency_days
+distribution for the top 5% of customers by attempt_count (threshold: >=25
+attempts, 311 customers) directly. **Result:** 292 of 311 customers (94%) sit
+at recency_days under 100 — not clustered at 250-350, and not at 500-700.
+**The rotation's specific visual read was wrong.** This is not a subtle
+refinement of the Query 135 finding; the claimed peak location was incorrect
+by several hundred days. Most likely cause: overplotting and viewing-angle
+density effects in a 650+ point log-scaled 3D scatter — the actual densest
+cluster (near recency=0, where roughly a third of the full sample already
+sits) can visually recede or partially occlude depending on rotation, while a
+sparser, more isolated set of points elsewhere reads as more visually
+prominent simply because it has open space around it. This is a known failure
+mode of 3D scatter density, not a one-off fluke specific to this exhibit.
+
+**Reconciled with Query 135, not contradicting it.** Query 135 measured
+median attempt_count by COHORT (grouped by first_transaction_date) and found
+older cohorts have higher medians — that finding stands, confirmed at the
+median across 1,000+ customers per cohort. Query 136 measured something
+different: where individual high-attempt OUTLIERS sit on the recency axis
+specifically. The two are compatible: a customer can belong to an early,
+high-median cohort by first_transaction_date while still showing low
+recency_days, if they've simply remained active recently. The corrected,
+sharper finding: this population's highest-attempt individuals are
+disproportionately customers who are BOTH long-tenured AND still recently
+active — sustained engagement, not a lapsed-and-done cohort. That is a
+better, more specific finding than what the rotation alone suggested, and it
+only exists because the rotation's claim was checked rather than trusted.
+
+**Why this matters for the methodology note above:** this is the clearest
+example in this thread of the standing "nothing becomes a finding on a chart
+alone" rule doing real work, not just formal due diligence. The rotation
+didn't just need refining — its specific, stated claim (peak at 250-350 days)
+was factually wrong, and would have gone into this log incorrect if accepted
+on sight. The rule caught it working exactly as intended.
+
+**Geometric note, not a finding.** Rotating the corrected exhibit to the
+Recency × First-Transaction-Date plane shows the 23 never-converted customers
+falling on a near-perfect diagonal. This is a mathematical consequence of the
+group's own definition, not discovered structure — 21 of 23 have exactly one
+transaction attempt (Query 132), so `first_transaction_date` and
+`last_transaction_date` are identical for them by construction, which forces
+`recency_days` and "time since first touch" to be the same number. Recorded
+here specifically so it isn't mistaken for a finding in a later pass.
+
+**Open, unresolved:** final exhibit lineup and file naming for the gallery not
+yet settled — decide between one preferred link, or a small multi-angle set
+matching the Q98 source/full-scale/v2/log-scaled pattern already used for the
+RFM cube.
+
+#### Methodology Note — The Visual-First Experiment, and What It's Actually Testing
+
+Queries 131-135 were deliberately run visual-first rather than SQL-first for
+several of their findings — rotate the cube, spot a candidate shape, then
+confirm or kill it in SQL. That's backwards from how a production analytics
+workflow should run, and it was backwards on purpose: this project's founding
+question is whether 3D rotation earns a place in the analytical toolkit, and
+the only way to actually test that is to let the visual go first and see what
+it's good for and what it isn't — not assume the answer and build the
+efficient version.
+
+Result, stated plainly: rotation reliably generated real candidates worth
+checking — a tenure effect (Query 135, confirmed) and a launch-window cohort
+(Query 131, confirmed). SQL confirmed both. But the visual layer also
+introduced its own failure modes that a SQL-first pass never would have hit: a
+truncated, badly biased sample (the first exhibit build's population backdrop
+covered `recency_days` 0-14 only, nowhere near the group being studied), an
+uncalibrated linear color scale that collapsed a 1-466 range into one shade,
+a diagonal line that looked like discovered structure but was actually a
+geometric necessity of the group's own definition, and — the sharpest case —
+a specific, stated visual claim (Query 136: "the high-attempt tower peaks
+around 250-350 days recency") that turned out to be factually wrong. The real
+distribution put 94% of that population under 100 days, several hundred days
+off from what the rotation appeared to show, most likely due to overplotting
+and viewing-angle density effects in a dense log-scaled scatter. None of
+those four were data findings. All four were visualization-layer failures,
+caught and fixed the same way a bad SQL join gets caught and fixed — which is
+itself informative about what working this way actually costs, and the last
+one in particular is the clearest evidence in this project so far that a
+rotation's specific numeric or spatial claim cannot be trusted on sight, only
+the fact that it flagged something worth checking.
+
+Honest conclusion so far: visuals are a strong hypothesis-generation layer on
+top of disciplined SQL, not a replacement for it, and not a source of
+confirmable specifics on their own — the flag is trustworthy, the read is
+not. A tight SQL-first exploration script (group by cohort, compare mean to
+median, done) likely reaches the same confirmed findings faster and without
+the rebuild cycles or the risk of banking an incorrect visual read. What the
+rotation adds is the prompt to ask the question in the first place, plus a
+second, separate thing worth testing on its own terms: whether that same
+rotation is a functional communication layer for a stakeholder who doesn't
+read SQL output — someone who will never run Query 135 or 136 themselves but
+might genuinely understand "customers who joined early have had more time to
+try, twice" faster from a rotatable cube than from a table of cohort quarters
+and medians. That's a different question from whether the visual finds things
+correctly, and this project hasn't tested it yet. Worth its own explicit pass
+before Chapter Four closes: hand a completed exhibit to someone outside the
+analysis, with no SQL underneath it visible, and see whether they walk away
+with the
+correct finding or a wrong one.
+
+---
+
 ## Open Items
 
-Tracked as of July 18, 2026 — not yet resolved, carried forward rather than silently dropped:
+Tracked as of July 20, 2026 — not yet resolved, carried forward rather than silently dropped:
 
 1. **Query 104 (wave/spray high-return-rate cluster)** — explicitly deprioritized; not being actively pursued. Documented here as a deliberate decision, not an oversight.
 2. **Header-format retrofit, queries 1-104** — the sequence-numbered filename header format adopted at query 105 (`-- Query [number]_[descriptive_filename]`) is owed retroactively on all prior queries. Deferred until after Chapter Four ships.
-3. **Business recommendations section** — drafted conversationally in a prior session (one recommendation per confirmed finding) but not yet written into this log as a formal section. *[Updated July 18, 2026: intentionally held until the MRP/inventory sprint (folding `unattributed_transactions` back in for stock-turnover and reorder-timing analysis) is complete, so recommendations can be written once covering the full finding set rather than drafted now and amended piecemeal. Expected to be a short addition once reached.]*
-4. **Never Converted dedicated exhibit** — the 23-customer never-converted population currently routes to the general RFM cube (`uk_retail_rfm_3d_log.html`) as a drill-down target rather than a dedicated exhibit, since the population is small. Open for reconsideration if a dedicated view is wanted later.
+3. **Business recommendations section** — drafted conversationally in a prior session (one recommendation per confirmed finding) but not yet written into this log as a formal section. Intentionally held until the MRP/inventory sprint (folding `unattributed_transactions` back in for stock-turnover and reorder-timing analysis) is complete, so recommendations can be written once covering the full finding set rather than drafted now and amended piecemeal.
+4. **Never Converted dedicated exhibit — final lineup.** *[Updated July 20, 2026: superseded by Queries 131-135 above. A dedicated exhibit was built (four variants exist); still open is which subset makes it into the gallery, and under what final filenames.]*
+5. **Attempt-count tenure effect exhibit** — Query 135 confirmed a real, population-wide finding (attempt count is substantially tenure-driven) that doesn't yet have its own exhibit. Candidate for a dedicated Chapter Four view once the never-converted lineup is settled.
+6. **Stakeholder-communication test for interactive exhibits** — per the methodology note above, this project has tested whether 3D rotation helps *find* things but not yet whether it helps *communicate* confirmed findings to someone who doesn't read SQL. Candidate: hand a finished exhibit to someone outside the analysis and see whether they arrive at the correct finding.
 
 **Resolved since last update:**
 - ~~Gut-check exhibit gallery entry~~ — **RESOLVED.** `gutcheck_105_121_funnel_lockstep_review.html` (expanded from the original 105-119 range to include the veer-off closure and the 350-399 day spike resolution) is confirmed placed in `3dplots/` and linked from `index.html`, alongside caveat notations on the two Chapter Three exhibit descriptions it revises.
 
 ---
 
-**Document version:** v45 — *In progress; this document is actively updated as the investigation continues. Version number increments with each substantive revision.*
+**Document version:** v47 — *In progress; this document is actively updated as the investigation continues. Version number increments with each substantive revision.*
 
 *This document is updated as each new phase of investigation is completed. Individual query documentation lives in `/sql/`; this file is the narrative connecting them.*
