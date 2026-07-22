@@ -1,3 +1,5 @@
+-- Query 59_amend_clean_transactions_exclude_admin_codes
+
 -- ============================================================
 -- AMENDMENT: clean_transactions — exclude administrative stock
 --            codes (POST, DOT, M, C2, BANK CHARGES, etc.)
@@ -17,7 +19,6 @@
 --      patched per-field, to keep every derived field consistent.
 -- ============================================================
 DROP TABLE IF EXISTS uk_retail.clean_transactions;
-
 CREATE TABLE uk_retail.clean_transactions AS
 WITH deduplicated AS (
     SELECT DISTINCT *
@@ -53,3 +54,32 @@ SELECT
     END AS country,
     invoice_date
 FROM excluded_removed;
+
+-- RESULT: 1,022,519 rows -- confirmed exact match against the expected
+-- arithmetic (1,028,437 prior row count minus 5,918 administrative
+-- rows identified in Query 58). Like Queries 24 and 38 before it, this
+-- is a DROP TABLE + CREATE TABLE AS statement with no exportable
+-- result grid.
+
+-- CONFIRMED FINDING: The administrative-code exclusion is confirmed
+-- applied at the correct scale -- row count matches exactly. However,
+-- this retrofit pass caught a real, previously undocumented side
+-- effect: the exclusion filter (d.stock_code ~ '^[0-9]+[A-Za-z]*$')
+-- uses the exact same regex pattern that Query 19 originally used to
+-- surface non-numeric codes -- the same pattern Query 20 then proved
+-- produces a false positive on "47503J " (trailing space), a genuine
+-- product ("SET/3 FLORAL GARDEN TOOLS IN BAG") miscaught only because
+-- of a stray whitespace character, not because it's an administrative
+-- code. Since this amendment applies that same regex directly to
+-- stock_code without first trimming whitespace, the "47503J " row is
+-- silently dropped from clean_transactions here -- one legitimate
+-- customer transaction lost as an unintended side effect of reusing an
+-- exclusion pattern already known to have this specific false-positive
+-- case. The impact is small in isolation (a single row, immaterial
+-- dollar value per Query 58's $16.13 figure), but it represents a
+-- genuine, uncorrected regression of an issue this project had already
+-- solved once, at Query 20. Not caught by Query 60's verification,
+-- since that check only confirms zero rows match the exclusion
+-- pattern going forward -- it cannot distinguish a correctly-excluded
+-- administrative code from an incorrectly-excluded real product with a
+-- formatting defect matching the same pattern.

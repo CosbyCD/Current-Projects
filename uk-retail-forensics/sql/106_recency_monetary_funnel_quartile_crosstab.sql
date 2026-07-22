@@ -1,4 +1,5 @@
 -- Query 106_recency_monetary_funnel_quartile_crosstab
+
 -- WHAT: Cross-tabulate recency quartile against monetary_gross quartile,
 --       to test the same "recency-monetary funnel" claim using the data's
 --       own distribution rather than an arbitrary fixed day-cutoff.
@@ -8,7 +9,6 @@
 --      the project's standing rule, both are built and kept side by side
 --      rather than settling on one threshold definition (precedent: gross
 --      vs. net monetary, whole-day vs. fractional-day interval).
-
 WITH quartiled AS (
     SELECT
         customer_id,
@@ -27,18 +27,20 @@ FROM quartiled
 GROUP BY recency_quartile, monetary_quartile
 ORDER BY recency_quartile, monetary_quartile;
 
--- RESULT (run July 18, 2026):
--- Of the top monetary quartile (1,463 highest-spend customers): 729 (49.8%)
--- fall in the most-recent recency quartile, 458 (31.3%) in the second,
--- tapering to 215 (14.7%) and 61 (4.2%) in the most-lapsed recency
--- quartile. A clean, monotonic decline — recency and monetary value move
--- together as a general tendency.
---
--- However, this directly contradicts the ABSOLUTE version of the original
--- claim ("no customer past ~300-400 days ever reaches high monetary
--- value"): 61 customers sit in BOTH the highest monetary quartile and the
--- most-lapsed recency quartile. That is not zero.
---
+-- RESULT (run July 18, 2026, verified against pasted CSV): 16 cells,
+-- summing to 5,852 — correctly excluding the 23 never-converted
+-- customers, since this query's WHERE clause includes monetary_gross IS
+-- NOT NULL (unlike Query 99/105's recency_days-only filter, which was a
+-- no-op). Of the top monetary quartile (1,463 highest-spend customers):
+-- 729 (49.8%) fall in the most-recent recency quartile, 458 (31.3%) in
+-- the second, tapering to 215 (14.7%) and 61 (4.2%) in the most-lapsed
+-- recency quartile — a clean, monotonic decline, all percentages confirm
+-- exactly against the CSV. However, this directly contradicts the
+-- ABSOLUTE version of the original claim ("no customer past ~300-400
+-- days ever reaches high monetary value"): 61 customers sit in BOTH the
+-- highest monetary quartile and the most-lapsed recency quartile. That is
+-- not zero.
+
 -- CONFIRMED FINDING (revised from Chapter Three's original visual claim,
 -- agrees with query 105's independently-derived fork):
 -- Average customer spend declines steadily as recency increases, but a
@@ -48,7 +50,7 @@ ORDER BY recency_quartile, monetary_quartile;
 -- legitimate follow-up investigation thread (wholesale/reseller one-off
 -- large orders vs. data quality issue vs. genuine retention-target
 -- segment) — not yet investigated as of this query's close.
---
+
 -- [REVISION NOTICE — added by Query 127_whale_definition_discrepancy_check,
 -- run July 18, 2026: the NTILE(4) OVER (ORDER BY recency_days) window
 -- function used in this query is non-deterministic at tied boundary

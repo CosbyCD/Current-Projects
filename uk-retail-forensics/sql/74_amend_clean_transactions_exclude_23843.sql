@@ -1,3 +1,5 @@
+-- Query 74_amend_clean_transactions_exclude_23843
+
 -- ============================================================
 -- AMENDMENT: clean_transactions — exclude the 80,995-unit
 --            confirmed data entry error (stock_code 23843)
@@ -22,7 +24,6 @@
 --      and shouldn't be trusted in any downstream calculation.
 -- ============================================================
 DROP TABLE IF EXISTS uk_retail.clean_transactions;
-
 CREATE TABLE uk_retail.clean_transactions AS
 WITH deduplicated AS (
     SELECT DISTINCT *
@@ -59,3 +60,23 @@ SELECT
     END AS country,
     invoice_date
 FROM excluded_removed;
+
+-- RESULT: 1,022,517 rows -- confirmed exact match to the expected
+-- arithmetic (1,022,519 pre-amendment minus 2 rows for the excluded
+-- stock_code 23843 pair). Like Queries 24, 38, and 59 before it, this
+-- is a DROP TABLE + CREATE TABLE AS statement with no exportable
+-- result grid.
+
+-- CONFIRMED FINDING: The third amendment to clean_transactions is
+-- confirmed applied at exactly the expected scale -- a precise,
+-- individually-targeted two-row exclusion, not a broad pattern rule.
+-- This continues the same precedent set in Chapter One (the 12,540-
+-- unit outlier) and reinforces this project's standing principle that
+-- a transaction netting to zero dollars is not the same as a
+-- transaction that never happened -- it still corrupts gross and
+-- frequency counts and must be excluded on its own facts, not
+-- excused because the bottom line looks unaffected. This amendment
+-- invalidates the row-level correctness of Fields 1 (Recency),
+-- 2 (Frequency), and 3 (Monetary Value) as rebuilt against the second
+-- amendment -- all three require one more rebuild pass before Chapter
+-- Two can proceed to Field 4.

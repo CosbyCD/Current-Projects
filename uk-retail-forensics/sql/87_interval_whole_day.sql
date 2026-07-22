@@ -1,3 +1,5 @@
+-- Query 87_customer_return_after_cancellation
+
 -- ============================================================
 -- FOLLOW-UP: Did customers return after a cancellation?
 -- WHAT: For every customer with at least one cancelled order,
@@ -35,3 +37,21 @@ SELECT
     ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 1) AS pct_of_customers_with_cancellations
 FROM returned
 GROUP BY returned_after_cancellation;
+
+-- RESULT: 2,443 total customers had at least one cancellation. Of
+-- those, 1,741 (71.3%) placed at least one completed order after
+-- their most recent cancellation date; 702 (28.7%) never placed
+-- another completed order afterward.
+
+-- CONFIRMED FINDING: A cancellation is not a strong predictor that a
+-- customer is lost -- nearly three-quarters of customers who cancel
+-- at least once go on to complete another order afterward. This is a
+-- standalone, stakeholder-relevant finding, tracked separately from
+-- the six core customer_behavior_fields (Recency, Frequency, Monetary
+-- Value, Interval, Product Diversity, Return Rate) rather than folded
+-- into any of them -- it answers a "does this event predict churn"
+-- question, distinct from Field 4's "how far apart are this
+-- customer's orders" measurement. Worth flagging as a candidate for
+-- its own exhibit or dashboard callout, since "71% of cancellers come
+-- back" is a concrete, actionable number a retail stakeholder would
+-- likely want surfaced directly.

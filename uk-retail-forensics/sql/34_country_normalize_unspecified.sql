@@ -1,3 +1,5 @@
+-- Query 34_country_normalize_unspecified
+
 -- ============================================================
 -- FINDING: Country field — "Unspecified" and "European Community"
 --          combined into a single tracked non-specific category
@@ -30,3 +32,27 @@ SELECT
 FROM uk_retail.raw_transactions
 GROUP BY country_normalized
 ORDER BY occurrences DESC;
+
+-- RESULT: 39 distinct country_normalized values (down from 41),
+-- confirming the merge worked as intended. "Unspecified-European
+-- Community" shows exactly 817 occurrences -- an exact match to
+-- 756 + 61 = 817 from Query 33, confirming no rows were lost, double-
+-- counted, or miscategorized during the merge. All other country
+-- values pass through unchanged, in the same rank order as Query 33.
+-- "RSA" (169 rows) was deliberately left untouched, consistent with
+-- Query 33's finding that it's a legitimate abbreviation rather than a
+-- placeholder needing this kind of merge.
+
+-- CONFIRMED FINDING: The normalization is confirmed exact and lossless
+-- -- "Unspecified" and "European Community" are now tracked as a single
+-- combined category (817 rows, ~0.08% of the dataset) rather than two
+-- separate ambiguous-country entries, while every genuine country value
+-- remains untouched. This preserves the useful signal that both values
+-- represent non-specific geography, without conflating them with real
+-- country data or silently discarding the distinction. "RSA" remains a
+-- separate, standalone value pending a possible future normalization to
+-- "South Africa" -- not addressed in this pass, since it's a legitimate
+-- abbreviation rather than a placeholder. This closes the country-field
+-- investigation thread (33-34): the field is now fully characterized,
+-- with a clear, documented, and reversible normalization applied to its
+-- one genuine placeholder pattern.

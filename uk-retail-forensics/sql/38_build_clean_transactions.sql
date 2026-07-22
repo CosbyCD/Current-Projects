@@ -1,3 +1,5 @@
+-- Query 38_build_clean_transactions
+
 -- ============================================================
 -- BUILD: clean_transactions — the working dataset for the six
 --        derived customer behavior fields
@@ -24,6 +26,8 @@
 --      - Combines "Unspecified" and "European Community" into
 --        one tracked category (Thread 5)
 -- ============================================================
+DROP TABLE IF EXISTS uk_retail.clean_transactions;
+
 CREATE TABLE uk_retail.clean_transactions AS
 WITH deduplicated AS (
     SELECT DISTINCT *
@@ -58,3 +62,33 @@ SELECT
     END AS country,
     invoice_date
 FROM excluded_removed;
+
+-- RESULT: CREATE TABLE AS reported "SELECT 1028437" -- 1,028,437 rows
+-- in the finished clean_transactions table. This is 111 rows MORE than
+-- the naive expected count (1,067,371 raw - 34,335 duplicate excess -
+-- 4,709 excluded - 1 outlier line = 1,028,326 expected). Like Query 24,
+-- this query has no matching output file -- it is a CREATE TABLE AS
+-- statement that builds a table directly rather than returning an
+-- exportable result grid.
+
+-- CONFIRMED FINDING: A real 111-row discrepancy exists between the
+-- expected and actual clean_transactions count -- fully explained in
+-- Query 39: excluded_rows itself was built (Query 24) before the
+-- deduplication policy was finalized, and contains 111 internal
+-- exact-duplicate rows. This query's `deduplicated` CTE runs first,
+-- collapsing raw_transactions to one row per unique combination --
+-- including collapsing those 111 duplicate pairs before the exclusion
+-- filter ever sees them. The exclusion step therefore had fewer actual
+-- rows to remove than the raw 4,709 count implied, producing exactly
+-- 111 more final rows than the naive subtraction predicted. The
+-- duplicate-row problem (Queries 17-18) and the internal-stock-activity
+-- problem (Phase 6, Threads 1-3) turned out to be partially entangled
+-- in a way not explicitly tested before this point -- the build handled
+-- the overlap correctly by construction. clean_transactions at
+-- 1,028,437 rows is confirmed fully reconciled and trustworthy (see
+-- Query 39 for the direct verification). Note for later reference: the
+-- real project amends this table twice more downstream -- once to
+-- remove administrative stock codes still present despite Query 24's
+-- exclusion logic, and once for a second, independently-discovered
+-- outlier -- meaning this 1,028,437-row version is not the final state
+-- of clean_transactions, only the first fully-reconciled one.

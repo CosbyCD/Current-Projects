@@ -885,6 +885,38 @@ Tracked as of July 20, 2026 — not yet resolved, carried forward rather than si
 
 ---
 
-**Document version:** v47 — *In progress; this document is actively updated as the investigation continues. Version number increments with each substantive revision.*
+---
+
+## Session Update — July 21, 2026 (evening): Header retrofit, queries 94–106
+
+Continuing the header-format retrofit (see Open Item 2 above) from Query 94 through Query 106, applying the standard adopted at Query 105 (`-- Query [number]_[descriptive_filename]` header, WHAT/WHY preserved as originally written, RESULT and CONFIRMED FINDING blocks appended after verification against actual pasted data — never assumed).
+
+**Open Item 2 status: retrofit is now complete for queries 1–106.** Queries 105 and 106 already carried the new header at time of writing but had their RESULT/CONFIRMED FINDING blocks independently re-verified against the pasted CSVs during this pass, surfacing corrections noted below. Queries 107 and later are NOT yet re-verified in this pass — flagged as remaining work (see To-Do below). Note: this log's own Open Item 1 states Query 104 was "explicitly deprioritized; not being actively pursued" — that does not match this session's actual work, where Query 104 was retrofitted with a full verified write-up (788-customer high-return/low-frequency cluster). Flagging this contradiction rather than silently resolving it; the log's Open Item 1 claim should be checked against whatever source informed it.
+
+**Corrections and discrepancies surfaced during this pass** (each documented in full, with append-only notations, in the individual query write-ups themselves — summarized here for narrative continuity):
+
+- **Query 96** (`unattributed_transactions`): WHAT block claimed 243,007 rows; actual `CREATE TABLE AS` result was 228,297. Resolved by Query 97's independent re-confirmation (228,297, matching exactly) — gap traces to the 243,007 figure being pre-deduplication (Query 14, against `raw_transactions`), not a new error. Append-only notation drafted for Query 96's own write-up.
+- **Query 99** (recency gap histogram): `WHERE recency_days IS NOT NULL` does not exclude the 23 never-converted customers as commented — it's a no-op, since `recency_days` has no NULLs (only `frequency_completed`/`monetary_gross` are NULL for those 23). Total returned was 5,875, not 5,852. The hypothesized 100-250 day density gap was NOT confirmed; a genuine, unhypothesized dip-then-rebound at 325-424 days was found instead.
+- **Query 100–101** (recency bump cohort): Confirmed the 350-424 day bump as a real, dateable Oct-Dec 2010 seasonal cohort — 618 customers, 91.4% with ≤5 orders, consistent with the previously established seasonal-acquisition finding.
+- **Query 102** (customer 17961 order history): WHAT block claimed ~120 completed orders / ~£24 average order value; actual pulled data showed 100 completed orders / £28.67 average. Resolved by Query 103's full-field export, which confirmed `frequency_completed = 100` directly from `customer_behavior_fields`. Append-only notation drafted for Query 102's own write-up.
+- **Query 104** (high-return/low-frequency cluster): WHY block claimed a "20-60%" return-rate range for the cluster; actual range (given the query's own `> 30` filter) was 30.8-80.0%. The referenced "moderate 0.41" full-population correlation figure has not been traced to its source query or independently verified within this retrofit.
+- **Query 105** (recency-monetary funnel, fixed buckets): Same `WHERE recency_days IS NOT NULL` no-op as Query 99 (total 5,875, not 5,852) — now a confirmed recurring pattern across two queries. Original RESULT text omitted the single largest MAX value in the table (£580,987.04, in the 0-49 day bucket) from its outlier discussion.
+- **Query 106** (recency-monetary funnel, quartile crosstab): Verified clean — all percentages and the 61-lapsed-whale figure confirmed exactly against the CSV. This query's embedded revision notice (citing Query 127's later supersession via the fixed dual-threshold definition, 58 customers) was preserved as-is, since it is part of the actual historical record rather than a forward citation introduced during this retrofit pass.
+
+## To-Do (as of July 21, 2026, 10pm — before git push)
+
+1. **Remaining SQL verification pass, queries 107 onward.** Not yet re-verified against pasted results in this session. These already carry the post-105 header format, so this is a RESULT/CONFIRMED FINDING accuracy pass (same treatment as 105/106), not a header retrofit.
+2. **Append-only notations still to be physically placed** in their original query write-ups (drafted in chat, not yet inserted into the canonical SQL files):
+   - Query 96: 243,007 → 228,297 correction, citing Query 97.
+   - Query 102: ~120 orders/~£24 avg → 100 orders/£28.67 avg correction, citing Query 103.
+3. **Query 59 open flag** (from the prior session's handoff) remains unresolved: the "47503J " trailing-space false positive was re-introduced by the Query 59 administrative-code exclusion amendment and never corrected in any of three subsequent `clean_transactions` amendments. Still open.
+4. **Query 104 status contradiction**: this log's Open Item 1 says Query 104 was deprioritized; this session's retrofit shows it was actually completed with a full write-up. Reconcile which is accurate.
+5. **Query 104's "moderate 0.41" correlation figure**: trace to source query and independently verify; not yet confirmed within this retrofit.
+6. **Recurring `WHERE recency_days IS NOT NULL` no-op pattern** (Queries 99, 105): worth a deliberate check across queries 107+ for the same mistaken exclusion claim, since it's now happened twice.
+7. **Chapter Four Tableau dashboard** — the active sprint deliverable, target July 26. Not addressed in this session.
+
+---
+
+**Document version:** v48 — *In progress; this document is actively updated as the investigation continues. Version number increments with each substantive revision.*
 
 *This document is updated as each new phase of investigation is completed. Individual query documentation lives in `/sql/`; this file is the narrative connecting them.*

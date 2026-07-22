@@ -1,3 +1,5 @@
+-- Query 101_recency_bump_cohort_frequency_check
+
 -- ============================================================
 -- VERIFICATION: Recency bump cohort — frequency distribution
 -- WHAT: Pulls frequency_completed for the 618 customers whose
@@ -39,3 +41,20 @@ SELECT
 FROM bumped
 GROUP BY frequency_bucket
 ORDER BY frequency_bucket;
+
+-- RESULT: 1 order = 259 customers, 2-5 orders = 306, 6-15 orders =
+-- 45, 16+ orders = 8. Sum = 618, matching the Query 100 cohort size
+-- exactly. Combined, 1-5 orders = 565 customers = 91.4% of the
+-- cohort. Only 53 customers (8.6%) placed 6 or more orders before
+-- their last purchase fell in the Oct-Dec 2010 window.
+
+-- CONFIRMED FINDING: The 618-customer Oct-Dec 2010 recency-bump
+-- cohort skews overwhelmingly toward low-frequency buyers — 91.4%
+-- placed 5 or fewer orders total. This supports framing the bucket
+-- as a genuine seasonal-acquisition cohort (customers who came in
+-- for a pre-Christmas purchase and largely didn't return) rather
+-- than as lost regulars who churned after an established buying
+-- pattern. The 53 customers with 6+ orders (8.6%) are a minority
+-- worth flagging separately if the Tableau workbook wants to
+-- distinguish "true seasonal one-and-done" from "moderate regulars
+-- who happened to stop in this window" within the same bucket.

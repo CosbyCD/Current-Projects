@@ -1,3 +1,5 @@
+-- Query 24_build_excluded_rows_table
+
 -- ============================================================
 -- BUILD: Tagged excluded-rows table — internal stock activity
 -- WHAT: Creates a new table capturing all rows identified as
@@ -34,3 +36,27 @@ WHERE
     (quantity < 0 AND (description IS NULL OR TRIM(description) = ''))
     OR (quantity > 0 AND (description IS NULL OR TRIM(description) = ''))
     OR (description IN ('check', 'found', 'Check', 'Found', 'CHECK', 'FOUND', '?', 'missing', 'Missing', 'MISSING', 'lost', 'Lost', 'LOST'));
+
+-- RESULT: An earlier "excluded_rows" table already existed under this
+-- name (source unclear -- likely an earlier draft or partial run), which
+-- initially caused a "relation already exists" error on first attempt.
+-- The table was dropped (DROP TABLE IF EXISTS) and rebuilt fresh from
+-- this exact query, guaranteeing the final table reflects Queries 06-23
+-- precisely rather than an unverified earlier version. Rebuild completed
+-- successfully: CREATE TABLE AS reported "SELECT 4709," confirming
+-- exactly 4,709 rows were inserted -- an exact match to the expected
+-- total (2,689 + 1,693 + 327 = 4,709) with no rows lost, duplicated, or
+-- miscounted during the CASE-based tagging.
+
+-- CONFIRMED FINDING: uk_retail.excluded_rows is now built and verified
+-- at exactly 4,709 rows, each tagged with the specific investigative
+-- thread (Phase 3, Phase 6 Thread 1, or Phase 6 Thread 3) that
+-- identified it, per this project's citation standard. This table
+-- serves two purposes going forward: (1) as the exclusion reference for
+-- building clean_transactions, ensuring these 4,709 non-customer-facing
+-- rows are cleanly separated rather than silently dropped, and (2) as
+-- its own standalone artifact for a possible future analysis of what
+-- internal data-entry inconsistency looks like at scale -- preserved,
+-- not discarded, per this project's segregate-don't-delete standard.
+-- See Query 25 for the verification count confirming this table's
+-- row count against the source characterization queries independently.
