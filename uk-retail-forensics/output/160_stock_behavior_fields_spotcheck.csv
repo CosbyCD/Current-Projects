@@ -1,0 +1,2 @@
+"stock_code","recency_days","frequency_completed","cancellation_count","monetary_gross","monetary_net","avg_interval_whole_day","avg_interval_fractional_day","distinct_customers","order_return_rate_pct","line_item_return_rate_pct"
+"23166",0,247,10,81985.11,4505.47,0.9,1.32,138,3.9,3.2
