@@ -56,3 +56,15 @@ ORDER BY invoice_date, invoice_no;
 -- any downstream documentation without checking which figure
 -- (~120 or 100) frequency_completed actually holds for this
 -- customer in customer_behavior_fields.
+
+-- [REVISION NOTICE — added per Query 103_full_field_export_for_exploration,
+-- run July 21, 2026: The ~120-order / ~£24-average-order-value figures in
+-- this query's own WHAT block are incorrect. Query 103's full-field export
+-- confirmed customer 17961's actual frequency_completed = 100 directly
+-- from customer_behavior_fields — matching this query's own direct
+-- order-history pull exactly (100 completed invoices, £2,866.74
+-- monetary_gross, £28.67 average order value). recency_days = 20 and
+-- cancellation_count = 2 were also confirmed to match. The habitual
+-- small-basket-buying finding in this query's CONFIRMED FINDING block
+-- stands unchanged; only the ~120/~£24 framing in the WHAT block is
+-- superseded.]

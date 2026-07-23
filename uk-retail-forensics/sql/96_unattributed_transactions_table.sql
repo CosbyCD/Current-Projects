@@ -45,3 +45,14 @@ WHERE customer_id IS NULL;
 -- should be run down before this number is cited anywhere else
 -- (e.g. Chapter Four documentation, the exhibit gallery, or any
 -- MRP/inventory sprint work that plans to fold this table back in).
+
+-- [REVISION NOTICE — added per Query 97_unattributed_transactions_reconciliation,
+-- run July 21, 2026: The 243,007 vs. 228,297 discrepancy flagged in this
+-- query's own RESULT block above is resolved. Query 97 independently
+-- re-confirmed 228,297 via a direct COUNT(*) against clean_transactions,
+-- matching this query's CREATE TABLE AS result exactly. The gap traces to
+-- timing — 243,007 was established at Query 14 against raw_transactions,
+-- before deduplication and before three subsequent clean_transactions
+-- amendments; those rows were excluded from clean_transactions for other,
+-- already-documented cleaning reasons before ever reaching this
+-- segregation step. 228,297 is confirmed final.]

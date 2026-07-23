@@ -59,3 +59,11 @@ ORDER BY invoice_date, invoice_no;
 -- exception in Chapter Four rather than excluding or correcting the
 -- underlying value, consistent with this project's segregate-don't-
 -- delete standard.
+
+-- [CORRECTION — verified July 22, 2026: the RESULT block describes
+-- C490807 and C490946 as having "nearly identical" item lists. Direct
+-- comparison confirms they are EXACTLY identical (37/37 stock codes
+-- match) — stronger evidence for the duplicate-cancellation theory than
+-- originally stated. Also, invoice 491193 is described as covering
+-- "roughly HALF" of the cancelled item list; actual overlap is 23/37 =
+-- 62%, a majority, not half.]

@@ -68,3 +68,11 @@ ORDER BY is_never_converted DESC, recency_days;
 -- should look like. This sample was used to rebuild never_converted_isolated_3d.html
 -- as the corrected full-population backdrop, replacing the biased version
 -- (preserved as never_converted_signal_check_partial_sample.html).
+
+-- [CORRECTION — verified July 22, 2026: the RESULT block states "650
+-- rows returned." The query actually returns 673 rows — 650
+-- systematically-sampled converted customers PLUS the 23 never-converted
+-- customers pulled in by the OR clause, which the original write-up
+-- omitted from its own row count and bucket table. The 650-row figure
+-- describes only the sampled-converted subset. Max recency in the full
+-- 673-row result is 738, not 737.]

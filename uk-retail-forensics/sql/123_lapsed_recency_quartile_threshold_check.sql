@@ -53,3 +53,13 @@ FROM quartiled;
 -- fixed dual-threshold definition used in Chapter Four (queries 122/126,
 -- 58 customers) — only the underlying NTILE quartile mechanism is flagged
 -- as non-deterministic, not this query's reported threshold.]
+
+-- [ADDENDUM — added July 22, 2026, independent of Query 127: cross-
+-- checking this query's stated recency-quartile-4 population against
+-- Query 106 and Query 115 (which both run NTILE(4) OVER (ORDER BY
+-- recency_days) over what should be the identical 5,852-customer
+-- population) surfaces a second, independent instance of the NTILE
+-- non-determinism issue Query 127 later formally diagnoses: Query 106's
+-- RQ4 total is 1,465; Query 115's is 1,463 — a 2-customer gap over an
+-- identical population and identical ORDER BY clause. Not previously
+-- documented in either query's own write-up or in Query 127.]

@@ -42,3 +42,37 @@ ORDER BY MIN(monetary_gross);
 -- £1,000+) doing heavier stocking orders, and a small tail (10
 -- customers) that may include cancelled-order artifacts similar to
 -- customer 12346. That tail is not yet individually characterized.
+
+-- [CORRECTION — verified July 22, 2026: the CONFIRMED FINDING states
+-- "23.3% at £1,000+." Actual figure is 24.3% (140+10=150 customers,
+-- 150/618 = 24.3%). One-percentage-point arithmetic error.]
+
+-- [REVISION — added per Query 141_nov2010_cohort_high_spend_tail_list,
+-- run July 22, 2026: the £5,000+ bucket count of 10 customers reported
+-- above is INCORRECT. Direct pull of the actual customer list (Query
+-- 141) returns only 7 customers. The other 3 (16995, 13353, 17755) are
+-- never-converted customers with NULL monetary_gross, miscategorized
+-- into this bucket because the CASE statement above has no explicit
+-- NULL branch -- "WHEN monetary_gross < 5000" evaluates to NULL (not
+-- TRUE) for a NULL input, so all three silently fell through to the
+-- catch-all ELSE '£5,000+' branch. This is the same class of
+-- NULL-fallthrough bug independently diagnosed for Tableau at Query
+-- 130. CORRECTED bucket count: £5,000+ = 7 customers, not 10.
+--
+-- DENOMINATOR DECISION: going forward, all percentages in this cohort
+-- breakdown use 615 (the 618-customer cohort MINUS the 3 never-converted
+-- customers with no spend to bucket) as the base, NOT 618. This matches
+-- the precedent set at Query 130, where never-converted customers are
+-- excluded from spend-based tiering entirely rather than being folded
+-- into whichever bucket a NULL happens to satisfy by default -- treating
+-- "no spend" as its own category, not as a silent member of an unrelated
+-- spend tier. CORRECTED percentages against the 615 base: £5,000+ =
+-- 7/615 = 1.14%; £1,000-4,999 = 140/615 = 22.76%; combined £1,000+ tail
+-- = 147/615 = 23.9% (superseding the earlier 24.3%/150-618 correction
+-- noted elsewhere on this file). The other three buckets (< £100,
+-- £100-499, £500-999) were never affected by the NULL bug and should
+-- also be re-expressed against 615 for internal consistency:
+-- < £100 = 30/615 = 4.9% (unchanged at this precision); £100-499 =
+-- 292/615 = 47.5%; £500-999 = 146/615 = 23.7%. All 7 genuine £5,000+
+-- customers have since been individually characterized (queries 121,
+-- 142-147) -- all confirmed as genuine spend, no artifacts.]

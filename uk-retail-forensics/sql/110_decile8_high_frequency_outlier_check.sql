@@ -54,3 +54,36 @@ ORDER BY frequency_completed DESC;
 -- required. This cross-chapter consistency (the same customer surfacing
 -- independently via chart rotation in Chapter Three and via decile
 -- crosstab in Chapter Four prep) supports confidence in both findings.
+
+-- [FLAG — unresolved as of July 22, 2026: this query's WHY block
+-- characterizes customer 17961 as "resolved as a recurring small
+-- retailer." This conflicts with the investigation log's Chapter Three
+-- closing summary ("seasonal-reseller pattern") and with Query 102's own
+-- verified finding ("NOT a wholesale/reseller pattern... habitual
+-- small-basket, low-unit-price purchasing"). Three documents, two
+-- conflicting framings. Needs a single reconciled statement before
+-- Chapter Four repeats any version of this.]
+
+-- [RESOLUTION — added July 22, 2026: the "recurring small retailer"
+-- framing in this query's WHY block, and the investigation log's
+-- separate "seasonal-reseller pattern" framing, are both superseded.
+-- Query 102's verified order-history pull explicitly found NO evidence
+-- of wholesale/reseller behavior (no bulk single-SKU orders) --
+-- "reseller" in any form is not supported by the data. "Seasonal" was
+-- never tested by any query in this project. Reconciled characterization:
+-- customer 17961 is a recurring, high-frequency, small-basket buyer (100
+-- completed orders, £28.67 average, £13.65 median, low-unit-price
+-- novelty/craft items) -- "recurring" and "small-basket" are confirmed;
+-- "retailer/reseller" and "seasonal" are not.
+--
+-- ANALYST OBSERVATION (Ree Cosby, July 22, 2026, not SQL-confirmed):
+-- the frequency, basket size, and craft/novelty product mix (pencils,
+-- erasers, trinket boxes) are more consistent with a non-retail personal
+-- or project-driven use case than with any resale profile -- candidate
+-- readings include a teacher or craft instructor buying classroom
+-- supplies, a hobbyist crafter, or a set decorator/prop buyer, among
+-- other possibilities. This dataset cannot distinguish between these --
+-- clean_transactions has no customer-type, business-name, or
+-- purchase-purpose field. Recorded as an open interpretive question for
+-- Chapter Four narrative framing, not a confirmed characterization, and
+-- not narrowed to a single guess.]

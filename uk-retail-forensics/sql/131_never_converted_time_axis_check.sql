@@ -64,3 +64,12 @@ ORDER BY conversion_status DESC, cbf.recency_days;
 -- axis for the planned Never Converted exhibit, paired with a raw order-attempt
 -- count (completed + cancelled) rather than frequency_completed, since that field
 -- excludes this group entirely by definition. See Query 132 for the attempt-count pull.
+
+-- [CORRECTION — verified July 22, 2026: the CONFIRMED FINDING states
+-- "15 of 23 (65%)" of never-converted customers cluster in the dataset's
+-- first three weeks (Dec 1-22, 2009). Direct count against the pasted
+-- data gives 14 of 23 (60.9%). Customer 13749 (first transaction
+-- 2010-01-07) was miscounted into this cluster; it belongs in the
+-- "remaining" group instead. The remaining group is therefore 9
+-- customers, not 8, spanning 2010-01-07 through 2010-12-02 — not
+-- "2010-03-08 through 2010-12-02" as originally stated.]

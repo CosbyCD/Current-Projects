@@ -56,3 +56,8 @@ ORDER BY conversion_status DESC, cbf.recency_days;
 -- abandonments scattered through 2010. attempt_count is confirmed as a usable,
 -- non-degenerate third axis for the planned exhibit (values 1-2, versus the
 -- uniform NULL/0 seen in frequency_completed and active_span_days).
+
+-- [CORRECTION — added July 22, 2026: this query's WHY block and
+-- CONFIRMED FINDING both cite Query 131's "65%" clustering figure. Per
+-- the correction now appended to Query 131 itself, the actual figure is
+-- 60.9% (14 of 23, not 15).]

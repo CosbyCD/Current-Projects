@@ -46,3 +46,8 @@ ORDER BY invoice_date, invoice_no;
 -- MAX-monetary_gross outliers in queries 105/109 are similarly inflated
 -- by cancelled bulk orders rather than genuine spend -- see query 112,
 -- which reruns the funnel check on monetary_net to test this directly.
+
+-- [CORRECTION — verified July 22, 2026: invoice 513774 is described as
+-- "18 doormat variants" in the RESULT block. Actual line count is 19
+-- (confirmed by direct count against the pasted CSV). The £142.31 total
+-- is correct and unaffected (19 x £7.49 = £142.31).]

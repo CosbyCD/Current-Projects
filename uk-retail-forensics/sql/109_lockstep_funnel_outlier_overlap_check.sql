@@ -65,3 +65,9 @@ ORDER BY frequency_completed DESC, monetary_gross DESC;
 -- genuine methodological catch: an aggregate MAX spike in two separate
 -- metrics landing in the same bucket does not imply a shared population
 -- driving both -- that assumption required verification, not inference.
+
+-- [CORRECTION — verified July 22, 2026: this query's own RESULT block
+-- states "136 customers" for the 300-349 day recency bucket. Direct row
+-- count of the actual query output is 152, independently confirmed
+-- against Query 105's own bucket count for the identical range. 136 was
+-- a transcription error; 152 is correct.]
