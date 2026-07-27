@@ -218,9 +218,9 @@
 
   <header>
     <a class="back-link" href="../README.md">&larr; Back to project overview</a>
-    <p class="case-tag">Case File — UK Online Retail II · Chapters Three &amp; Four</p>
+    <p class="case-tag">Case File — UK Online Retail II · Chapters Three, Four &amp; Five</p>
     <h1>Does a fully rotatable, interactive visualization change what you find?</h1>
-    <p class="thesis">Twenty exhibits from a documented forensic analysis of 5,852 customers — each one built, rotated, and cross-checked against SQL before being called a finding.</p>
+    <p class="thesis">Twenty-six exhibits from a documented forensic analysis of 5,852 customers and 4,734 stock-keeping units — each one built, rotated, and cross-checked against SQL before being called a finding.</p>
     <div class="meta-row">
       <div>Investigator: <span>Cherrie Cosby</span></div>
       <div>Opened: <span>Jul 6, 2026</span></div>
@@ -413,6 +413,60 @@
         <p class="exhibit-desc">Same population, backdrop colored by order-attempt count (log-scaled). This exhibit prompted a real, SQL-confirmed finding — attempt count is tenure-driven, not random (Query 135) — and then produced a wrong specific reading of its own: a rotation appeared to show the high-attempt population peaking at 250–350 days recency; Query 136 checked this directly and found it was actually 94% concentrated under 100 days, a misread of several hundred days caused by overplotting at a dense viewing angle. <em>Kept in the gallery deliberately, correction included, as the clearest example in this project of the standing rule earning its keep: a rotation can be trusted to flag something worth checking, not to report its own specifics correctly.</em></p>
       </div>
       <a class="exhibit-link" href="never_converted_colored_by_attempts.html" target="_blank" rel="noopener">Open exhibit ↗</a>
+    </div>
+
+    <div class="exhibit">
+      <div class="exhibit-number">Q174<small>Chapter Five</small></div>
+      <div>
+        <p class="exhibit-title">Inventory signal — combined 3D</p>
+        <p class="exhibit-desc">773 SKUs across three categories — Overdue Restock (572), Dead Stock (108), Seasonal Dormant (93) — on recency, monetary, and log-scaled frequency axes. Built from `unattributed_transactions` (228,297 rows, cleaned but unused since Queries 96/97), demonstrating that the same cleaning pass produces value beyond the original customer-side deliverable.</p>
+      </div>
+      <a class="exhibit-link" href="inventory_signal_3d.html" target="_blank" rel="noopener">Open exhibit ↗</a>
+    </div>
+
+    <div class="exhibit">
+      <div class="exhibit-number">Q165<small>Deep-dive</small></div>
+      <div>
+        <p class="exhibit-title">Dead Stock vs. Seasonal Dormant — deep-dive 3D</p>
+        <p class="exhibit-desc">201 SKUs on recency, monetary, and average-order-month axes — the spatial proof for Query 165's finding that 93 of the original 201 "dead stock" candidates are actually seasonal-only (entire order history in Nov/Dec), leaving 108 genuine clearance candidates. Average order month was introduced as an axis here after frequency_completed, which only takes values 1–3 for this subset, produced flat, uninformative stripes.</p>
+      </div>
+      <a class="exhibit-link" href="dead_stock_seasonal_deepdive_3d.html" target="_blank" rel="noopener">Open exhibit ↗</a>
+    </div>
+
+    <div class="exhibit">
+      <div class="exhibit-number">Q176<small>Standalone</small></div>
+      <div>
+        <p class="exhibit-title">Overdue Restock — standalone 3D</p>
+        <p class="exhibit-desc">572 SKUs on overdue-multiple, monetary, and frequency axes, Viridis color, both the Z-axis and color log-scaled — the population is heavily right-skewed and collapses into an unreadable blob without it. Overdue multiple (the literal number defining the category, retightened at Query 173 to an 8x threshold plus a £1,000 value floor) is used directly as an axis rather than recency.</p>
+      </div>
+      <a class="exhibit-link" href="overdue_restock_standalone_3d.html" target="_blank" rel="noopener">Open exhibit ↗</a>
+    </div>
+
+    <div class="exhibit">
+      <div class="exhibit-number">Q179<small>Comparison</small></div>
+      <div>
+        <p class="exhibit-title">Frequency distribution — customer vs. stock</p>
+        <p class="exhibit-desc">2D overlaid density histogram, log-transformed x-axis, 10,573 rows (5,852 customers / 4,721 stock). Built to test whether a visual "wave/spray" shape echoing across the customer-side cube and the Overdue Restock exhibit was a genuine cross-dataset connection or a shared statistical artifact. Both full populations show comparable right-skew (2.08x customer, 2.36x stock) but different shapes — a spike-and-tail versus a broad hump — confirming similar skew ratio does not mean similarly shaped distributions.</p>
+      </div>
+      <a class="exhibit-link" href="frequency_distribution_comparison.html" target="_blank" rel="noopener">Open exhibit ↗</a>
+    </div>
+
+    <div class="exhibit">
+      <div class="exhibit-number">Q135<small>Chapter Four</small></div>
+      <div>
+        <p class="exhibit-title">Attempt count — tenure effect</p>
+        <p class="exhibit-desc">2D line/bar combo built from Query 135's cohort data: median order-attempt count declining 10 → 6 → 4 → 3 → 2 → 2 → 2 → 2 → 1 across nine quarterly cohorts, confirming attempt count is tenure-driven rather than random.</p>
+      </div>
+      <a class="exhibit-link" href="attempt_count_tenure_effect.html" target="_blank" rel="noopener">Open exhibit ↗</a>
+    </div>
+
+    <div class="exhibit">
+      <div class="exhibit-number">Q180<small>Chapter Five</small></div>
+      <div>
+        <p class="exhibit-title">Frequency Spike Tier — isolated 3D</p>
+        <p class="exhibit-desc">The 586-customer Top Decile (Spike Zone) population, isolated on recency, frequency, and log-scaled monetary (Viridis color) axes, matching Query 128's count exactly. Built as the drill-down target for Tableau's Frequency Spike Overview chart.</p>
+      </div>
+      <a class="exhibit-link" href="frequency_spike_tier_isolated_3d.html" target="_blank" rel="noopener">Open exhibit ↗</a>
     </div>
 
   </div>

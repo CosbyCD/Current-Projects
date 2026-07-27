@@ -66,38 +66,10 @@
     <p>The 4,407 confirmed "Recent" customers (recency &le; 377 days, per Queries 122/126/127/130),
        colored by net spend (log-scaled) against the remaining 1,445-customer lapsed population in
        light gray. X = recency (days), Y = frequency (completed orders), Z = monetary_net (&pound;, log
-       scale).</p>
-    <p><strong>Drag to rotate. Hover for details. Click for granularity.<br>
-       Click a legend entry to hide/show that group; double-click a legend entry to isolate it and gray out
-       the rest — double-click again to restore all groups.<br>
-       Toggle "Pan" to grab and move the view if data scrolls off
-       screen when zoomed in. Use "Capture" to save a PNG of exactly what's on screen — your current zoom,
-       rotation, and pan position included. Use "Reset" to return to the default view and rotate mode.</strong></p>
+       scale). Drag to rotate. Hover any point for its exact values. Double-click to reset the view.</p>
   </div>
 
-  <div style="position:relative; margin-top:-48px;">
-    <div id="chart" class="chart"></div>
-    <div style="position:absolute; top:48px; right:8px; z-index:10; display:flex; gap:6px;">
-      <button id="resetViewBtn" title="Reset View" style="
-        background:rgba(255,255,255,0.92); border:1px solid #d8d2c4; color:#2a2a2a;
-        font-family:'Segoe UI', Arial, sans-serif; font-size:0.8em;
-        padding:5px 10px; border-radius:4px; cursor:pointer; box-shadow:0 1px 3px rgba(0,0,0,0.15);">
-        ⟲ Reset
-      </button>
-      <button id="panViewBtn" title="Pan Mode" style="
-        background:rgba(255,255,255,0.92); border:1px solid #d8d2c4; color:#2a2a2a;
-        font-family:'Segoe UI', Arial, sans-serif; font-size:0.8em;
-        padding:5px 10px; border-radius:4px; cursor:pointer; box-shadow:0 1px 3px rgba(0,0,0,0.15);">
-        🖐 Pan
-      </button>
-      <button id="captureViewBtn" title="Capture View" style="
-        background:rgba(255,255,255,0.92); border:1px solid #d8d2c4; color:#2a2a2a;
-        font-family:'Segoe UI', Arial, sans-serif; font-size:0.8em;
-        padding:5px 10px; border-radius:4px; cursor:pointer; box-shadow:0 1px 3px rgba(0,0,0,0.15);">
-        📷 Capture
-      </button>
-    </div>
-  </div>
+  <div id="chart" class="chart"></div>
 
   <div class="legend-row">
     <span><span class="swatch" style="background:#d4d0c8;"></span>Lapsed Typical, Lapsed Whale &amp; Never Converted (1,445)</span>
@@ -161,13 +133,7 @@ const layout = {
   plot_bgcolor: 'rgba(0,0,0,0)',
   font: { family: 'Segoe UI, Arial, sans-serif', color: '#2a2a2a', size: 11 },
   margin: { l: 0, r: 0, t: 10, b: 0 },
-  showlegend: true,
-  legend: {
-    x: 0.02, y: 0.90, xanchor: 'left', yanchor: 'top',
-    bgcolor: 'rgba(255,255,255,0.9)',
-    bordercolor: '#d8d2c4', borderwidth: 1,
-    font: { size: 11 }
-  },
+  showlegend: false,
   scene: {
     xaxis: { title: 'Recency (days)', gridcolor: '#e5e2da', zerolinecolor: '#e5e2da', color: '#6b6b6b',
              showspikes: true, spikethickness: 1, spikecolor: '#9a9a9a', spikedash: 'dot' },
@@ -175,45 +141,11 @@ const layout = {
              showspikes: true, spikethickness: 1, spikecolor: '#9a9a9a', spikedash: 'dot' },
     zaxis: { title: 'Monetary Net (£, log)', type: 'log', gridcolor: '#e5e2da', zerolinecolor: '#e5e2da', color: '#6b6b6b',
              showspikes: true, spikethickness: 1, spikecolor: '#9a9a9a', spikedash: 'dot' },
-    bgcolor: 'rgba(0,0,0,0)',
-    aspectmode: 'cube',
-    dragmode: 'turntable',
-    camera: {
-      eye: { x: 1.9, y: 1.9, z: 1.4 },
-      center: { x: 0, y: 0, z: 0 }
-    }
-  },
-  dragmode: 'turntable'
+    bgcolor: 'rgba(0,0,0,0)'
+  }
 };
 
-Plotly.newPlot('chart', [bgTrace, recentTrace], layout, { responsive: true, scrollZoom: true, doubleClick: 'reset+autosize' });
-
-let panActive = false;
-
-document.getElementById('resetViewBtn').addEventListener('click', function() {
-  Plotly.relayout('chart', {
-    'scene.camera.eye': { x: 1.9, y: 1.9, z: 1.4 },
-    'scene.camera.center': { x: 0, y: 0, z: 0 },
-    'scene.dragmode': 'turntable'
-  });
-  panActive = false;
-  document.getElementById('panViewBtn').style.background = 'rgba(255,255,255,0.92)';
-});
-
-document.getElementById('panViewBtn').addEventListener('click', function() {
-  panActive = !panActive;
-  Plotly.relayout('chart', { 'scene.dragmode': panActive ? 'pan' : 'turntable' });
-  this.style.background = panActive ? 'rgba(200,225,255,0.95)' : 'rgba(255,255,255,0.92)';
-});
-
-document.getElementById('captureViewBtn').addEventListener('click', function() {
-  Plotly.downloadImage('chart', {
-    format: 'png',
-    width: 1200,
-    height: 800,
-    filename: 'recent_isolated_3d_view'
-  });
-});
+Plotly.newPlot('chart', [bgTrace, recentTrace], layout, { responsive: true });
 </script>
 
 </body>

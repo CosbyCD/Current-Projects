@@ -41,6 +41,12 @@ This investigation is structured as a book, not a flat list of steps. **Chapter 
 
 **[Jump ahead to Chapter Two →](#chapter-two-deriving-the-six-customer-behavior-fields)** — skip the full Chapter One detail below and go straight to what's next.
 
+**Chapter Two (complete): Deriving the Six Customer Behavior Fields.** Builds recency, frequency, monetary value, order-to-order interval, product diversity, and return rate directly from `clean_transactions` — the six fields that feed the eventual 3D visualization. Includes two full field-rebuild passes triggered by contamination found mid-chapter (administrative stock codes; a single 80,995-unit data-entry error), and resolves the standing question of how to handle the 228,297 no-customer-ID rows. Closes with `uk_retail.customer_behavior_fields` (5,875 customers, eleven derived columns), fully verified.
+
+**Chapter Three (complete, closed July 16, 2026): 3D Visualization.** Tests this project's founding question directly against the full customer population — does rotating a 3D structure surface relationships a flat table or 2D chart cannot? Surfaces and (in the verification pass immediately following) confirms or revises three headline findings: the recency-monetary funnel, the frequency-monetary lockstep, and the 618-customer Nov 2010 Cohort. Includes a dedicated Method Honesty Assessment establishing this project's standing rule — a visual flags a candidate, only SQL confirms it.
+
+**Chapter Four (in progress): Tableau Dashboard and 3D Drill-Down Exhibits.** Translates Chapter Three's confirmed findings into a Tableau dashboard with mark-click URL actions, each routing to a purpose-built 3D Plotly exhibit. Surfaces and resolves the NTILE non-determinism discovery, builds the Funnel Tier and Never Converted exhibit lineups, and carries the retroactive header/verification-format retrofit for queries 1–106. Target completion: July 26, 2026.
+
 ---
 
 ## Query Index — Phase to File Map
@@ -73,8 +79,11 @@ All SQL files live in a single flat `/sql/` folder, numbered in the true chronol
 | 105 – 110 | Verification Pass | Recency-monetary funnel and frequency-monetary lockstep confirmed via SQL; outlier overlap check |
 | 111 – 119 | Verification Pass | Gross-vs-net discovery; cancelled-order artifacts; Nov 2010 cohort monetary profile |
 | 120 – 121 | Verification Pass | Veer-off observation closed; 350-399 day monetary spike closed |
-| 122 – 128 | NTILE Discovery | Threshold corrections; NTILE non-determinism found, diagnosed, and resolved; percentile-based frequency spike threshold |
+| 122 – 128 | Chapter Four | NTILE non-determinism found, diagnosed, and resolved; percentile-based frequency spike threshold |
 | 129 – 130 | Chapter Four | Dedicated 3D exhibit data pulls; never-converted tier leakage discovered and fixed |
+| 131 – 136 | Chapter Four | Never Converted exhibit lineup (four variants); attempt-count tenure-cohort confirmation |
+
+*Query 181 is a much later, out-of-sequence addition — the Nov 2010 Cohort exhibit data pull, built July 25, 2026 during active Chapter Four/Five Tableau exhibit work. It sits well outside this table's original 00a–136 range and is documented in place under "Revisiting Query 101," above, rather than given its own table row.*
 
 ---
 
@@ -500,11 +509,13 @@ While rotating toward the recency axis, a possible density gap was noticed in th
 
 **101** — `101_recency_bump_cohort_frequency_check.sql`. Pulled `frequency_completed` for the same 618-customer cohort (filtered on `recency_days BETWEEN 350 AND 424`, matching query 100's cohort definition exactly), bucketed into 1 order / 2-5 orders / 6-15 orders / 16+ orders.
 
-**Result: 259 / 306 / 45 / 8** across the four buckets (sums to 618). 91.5% of the cohort placed 5 or fewer orders total, with 259 being pure one-time buyers. Only 8.6% ever reached 6+ orders — the range where "established regular who churned" would be a more credible read than "seasonal one-off." **This is a low-frequency, seasonal-acquisition cohort, not a group of lost regular customers** — a meaningfully different story for a stakeholder-facing write-up than "we lost loyal customers."
+**Result: 259 / 306 / 45 / 8** across the four buckets (sums to 618). 91.5% *[should read 91.4% — 565/618 = 91.42%, not 91.5%; a small rounding slip in this original write-up, only caught during the July 25, 2026 re-verification below]* of the cohort placed 5 or fewer orders total, with 259 being pure one-time buyers. Only 8.6% *[superseded — see the July 25, 2026 revision, below: the true figure is 8.1% (50/618) once the 16+ bucket is corrected]* ever reached 6+ orders — the range where "established regular who churned" would be a more credible read than "seasonal one-off." **This is a low-frequency, seasonal-acquisition cohort, not a group of lost regular customers** — a meaningfully different story for a stakeholder-facing write-up than "we lost loyal customers."
 
 **Methodological note preserved from this investigation:** the first draft of query 101 filtered on `last_invoice_date` directly (Oct 1 - Dec 31, 2010) rather than on the existing `recency_days` column, and returned 700 customers instead of 618 — a second, independent derivation of what should have been the same cohort, introduced by mistake. The fix was not to reconcile the two counts but to recognize the second definition as an error and drop it in favor of the single existing source-of-truth column (`recency_days`, already established and verified in query 100). Standing rule for the remainder of this project: when two independently-derived queries disagree on what should be the same group, the fix is to find and remove the accidental second definition, not to average or reconcile the two.
 
 **Finding, confirmed and closed:** the 350-424 day recency bump is a real, distinct cohort — 618 customers whose last purchase clustered in the November 2010 pre-Christmas stocking window, predominantly low-frequency/one-time buyers who did not convert to repeat behavior. Flagged as a candidate Tableau calculated-field bucket for Chapter Four, alongside the 23 never-converted customers from query 98.
+
+**[Query 101's 16+ bucket count was later found to be off by 3, discovered and corrected during Chapter Four's Nov 2010 Cohort exhibit build — see "Revisiting Query 101," under Chapter Four, below, for the full account.]**
 
 ### Investigating Customer 17961
 
@@ -616,7 +627,11 @@ Per this project's standing practice ("anything consequential that doesn't natur
 
 **121** — pulled every customer in the 350-399 day recency bucket, sorted by `monetary_gross` descending, to finally trace the £65,500.07 figure left unexamined since query 105 and resurfaced unresolved in query 114. **Result: customer 16754** — 371 days recency, 29 completed orders, 5 cancellations, monetary_net £54,692.82 (gap only 16.5% of gross). Structurally different from the cancelled-bulk-order artifacts (12346, 15749): this customer has a real, substantial order history, and the gross/net gap is consistent with ordinary cancellation activity rather than one large cancelled order. **Confirmed as genuine spend** — a real member of the lapsed-whale population, not an artifact. Closes the last open thread from the funnel/lockstep verification pass.
 
-### Discovering NTILE Non-Determinism — Queries 122-127
+## Chapter Four: Tableau Dashboard and 3D Drill-Down Exhibits
+
+With Chapter Three's headline findings confirmed in SQL (see the verification pass immediately above), this chapter builds the stakeholder-facing deliverable: a Tableau dashboard where mark-click URL actions route to purpose-built 3D Plotly exhibits, letting a viewer move from a summary chart directly to the specific customer population behind it. This chapter also absorbs two pieces of retroactive housekeeping deferred from earlier chapters — the sequence-numbered header/verification-format retrofit owed on queries 1–104 (see Open Items), and, later, a correction to Query 101 discovered while extending this chapter's exhibit lineup to the Nov 2010 Cohort.
+
+### Discovering NTILE Non-Determinism — Queries 122-128
 
 Surfaced while building Chapter Four's Tableau calculated fields, translating the confirmed SQL findings into working IF-statement logic.
 
@@ -635,6 +650,8 @@ Two hypotheses tested and ruled out before finding the real cause:
 **Root cause confirmed:** `NTILE(4) OVER (ORDER BY recency_days)`, used throughout queries 106, 115, 122, and 123, has no secondary tiebreaker column. PostgreSQL does not guarantee stable, reproducible ordering for tied rows without one — meaning the exact quartile boundaries and membership counts reported in those four queries are not guaranteed to reproduce identically on rerun. This is a genuine methodological gap: queries that were treated as fixed reference points for multiple subsequent queries this session were themselves non-deterministic.
 
 **Decision:** rather than retrofit a tiebreaker and rerun the full NTILE chain to chase exact reproducibility, the simple dual-threshold definition — `recency_days >= 377 AND monetary_net >= 2180.28`, yielding **58 customers** — is adopted as the standard "lapsed whale" definition for all Chapter Four production use. It is fully deterministic, reproducible on every run, and easier to explain to a stakeholder than a population-quartile intersection. The NTILE-based 59-count remains documented as the original discovery mechanism (queries 106, 115) but is superseded for production use. Per this project's standing rule, queries 106, 115, 122, and 123 each carry their own revision notation rather than being silently corrected — see those files directly.
+
+**128** — Applying the same non-determinism lesson to the separate Frequency Spike threshold before it could repeat the same mistake: rebuilt the top-decile monetary boundary using `PERCENTILE_CONT` rather than `NTILE`, specifically to get a threshold that doesn't depend on tie-breaking behavior at all. **Result: £5,224.45** net spend (90th percentile) — the value adopted directly into `Frequency Spike Tier (Rev. Q108/128)`. This closes the same class of gap query 127 found, pre-emptively, before it could surface downstream in Chapter Four's second bucketed field the way it did in the first.
 
 **All five Chapter Four calculated fields** built from this verification pass (`Spend (Net)`, `Nov 2010 Cohort Flag`, `Never Converted Flag`, `Recency-Monetary Tier (Rev. Q105/106/122)`, `Frequency Spike Tier (Rev. Q108/128)`) — including full formulas, threshold history, and two independent verification passes each (initial build-time check, and a clean-rebuild-from-blank-sheet re-check) — are documented in full in `docs/chapter_four_calculated_fields.md`. *[Revised July 19, 2026 — see "Building the Chapter Four Drill-Down Exhibits," below: the `Recency-Monetary Tier` field was found to silently mislabel the 23 never-converted customers and was corrected. `docs/chapter_four_calculated_fields.md` reflects the corrected formula.]*
 
@@ -869,54 +886,56 @@ correct finding or a wrong one.
 
 ---
 
-## Open Items
+### Header-Format Retrofit and Verification Pass — Queries 1–106
 
-Tracked as of July 20, 2026 — not yet resolved, carried forward rather than silently dropped:
+The sequence-numbered header format adopted at Query 105 (`-- Query [number]_[descriptive_filename]`, with WHAT/WHY preserved as originally written and RESULT/CONFIRMED FINDING blocks appended only after verification against actual pasted data) was owed retroactively on queries 1–104, which predate it. This retrofit pass, carried out July 21, 2026, applied that standard to queries 94 through 106 — chosen as a first slice rather than the full 1–104 range, since Field 6 and Final Field Assembly (queries 91–95) mark a natural chapter boundary just before Chapter Three begins.
 
-1. **Query 104 (wave/spray high-return-rate cluster)** — explicitly deprioritized; not being actively pursued. Documented here as a deliberate decision, not an oversight.
-2. **Header-format retrofit, queries 1-104** — the sequence-numbered filename header format adopted at query 105 (`-- Query [number]_[descriptive_filename]`) is owed retroactively on all prior queries. Deferred until after Chapter Four ships.
-3. **Business recommendations section** — drafted conversationally in a prior session (one recommendation per confirmed finding) but not yet written into this log as a formal section. Intentionally held until the MRP/inventory sprint (folding `unattributed_transactions` back in for stock-turnover and reorder-timing analysis) is complete, so recommendations can be written once covering the full finding set rather than drafted now and amended piecemeal.
-4. **Never Converted dedicated exhibit — final lineup.** *[Updated July 20, 2026: superseded by Queries 131-135 above. A dedicated exhibit was built (four variants exist); still open is which subset makes it into the gallery, and under what final filenames.]*
-5. **Attempt-count tenure effect exhibit** — Query 135 confirmed a real, population-wide finding (attempt count is substantially tenure-driven) that doesn't yet have its own exhibit. Candidate for a dedicated Chapter Four view once the never-converted lineup is settled.
-6. **Stakeholder-communication test for interactive exhibits** — per the methodology note above, this project has tested whether 3D rotation helps *find* things but not yet whether it helps *communicate* confirmed findings to someone who doesn't read SQL. Candidate: hand a finished exhibit to someone outside the analysis and see whether they arrive at the correct finding.
+**Status: complete for queries 1–106.** Queries 105 and 106 already carried the header at time of writing but had their RESULT/CONFIRMED FINDING blocks independently re-verified against the pasted CSVs during this pass, surfacing the corrections below. Queries 107 onward are not yet re-verified — this is a RESULT/CONFIRMED FINDING accuracy pass still owed, not a header retrofit, since those queries already carry the post-105 format (see Open Items).
 
-**Resolved since last update:**
-- ~~Gut-check exhibit gallery entry~~ — **RESOLVED.** `gutcheck_105_121_funnel_lockstep_review.html` (expanded from the original 105-119 range to include the veer-off closure and the 350-399 day spike resolution) is confirmed placed in `3dplots/` and linked from `index.html`, alongside caveat notations on the two Chapter Three exhibit descriptions it revises.
+**Corrections and discrepancies surfaced during this pass**, each also carrying its own append-only notation in the individual query write-up above:
 
----
-
----
-
-## Session Update — July 21, 2026 (evening): Header retrofit, queries 94–106
-
-Continuing the header-format retrofit (see Open Item 2 above) from Query 94 through Query 106, applying the standard adopted at Query 105 (`-- Query [number]_[descriptive_filename]` header, WHAT/WHY preserved as originally written, RESULT and CONFIRMED FINDING blocks appended after verification against actual pasted data — never assumed).
-
-**Open Item 2 status: retrofit is now complete for queries 1–106.** Queries 105 and 106 already carried the new header at time of writing but had their RESULT/CONFIRMED FINDING blocks independently re-verified against the pasted CSVs during this pass, surfacing corrections noted below. Queries 107 and later are NOT yet re-verified in this pass — flagged as remaining work (see To-Do below). Note: this log's own Open Item 1 states Query 104 was "explicitly deprioritized; not being actively pursued" — that does not match this session's actual work, where Query 104 was retrofitted with a full verified write-up (788-customer high-return/low-frequency cluster). Flagging this contradiction rather than silently resolving it; the log's Open Item 1 claim should be checked against whatever source informed it.
-
-**Corrections and discrepancies surfaced during this pass** (each documented in full, with append-only notations, in the individual query write-ups themselves — summarized here for narrative continuity):
-
-- **Query 96** (`unattributed_transactions`): WHAT block claimed 243,007 rows; actual `CREATE TABLE AS` result was 228,297. Resolved by Query 97's independent re-confirmation (228,297, matching exactly) — gap traces to the 243,007 figure being pre-deduplication (Query 14, against `raw_transactions`), not a new error. Append-only notation drafted for Query 96's own write-up.
-- **Query 99** (recency gap histogram): `WHERE recency_days IS NOT NULL` does not exclude the 23 never-converted customers as commented — it's a no-op, since `recency_days` has no NULLs (only `frequency_completed`/`monetary_gross` are NULL for those 23). Total returned was 5,875, not 5,852. The hypothesized 100-250 day density gap was NOT confirmed; a genuine, unhypothesized dip-then-rebound at 325-424 days was found instead.
-- **Query 100–101** (recency bump cohort): Confirmed the 350-424 day bump as a real, dateable Oct-Dec 2010 seasonal cohort — 618 customers, 91.4% with ≤5 orders, consistent with the previously established seasonal-acquisition finding.
-- **Query 102** (customer 17961 order history): WHAT block claimed ~120 completed orders / ~£24 average order value; actual pulled data showed 100 completed orders / £28.67 average. Resolved by Query 103's full-field export, which confirmed `frequency_completed = 100` directly from `customer_behavior_fields`. Append-only notation drafted for Query 102's own write-up.
-- **Query 104** (high-return/low-frequency cluster): WHY block claimed a "20-60%" return-rate range for the cluster; actual range (given the query's own `> 30` filter) was 30.8-80.0%. The referenced "moderate 0.41" full-population correlation figure has not been traced to its source query or independently verified within this retrofit.
-- **Query 105** (recency-monetary funnel, fixed buckets): Same `WHERE recency_days IS NOT NULL` no-op as Query 99 (total 5,875, not 5,852) — now a confirmed recurring pattern across two queries. Original RESULT text omitted the single largest MAX value in the table (£580,987.04, in the 0-49 day bucket) from its outlier discussion.
+- **Query 96** (`unattributed_transactions`): WHAT block claimed 243,007 rows; actual `CREATE TABLE AS` result was 228,297. Resolved by Query 97's independent re-confirmation (228,297, matching exactly) — the gap traces to the 243,007 figure being pre-deduplication (Query 14, against `raw_transactions`), not a new error.
+- **Query 99** (recency gap histogram): `WHERE recency_days IS NOT NULL` does not exclude the 23 never-converted customers as commented — it's a no-op, since `recency_days` has no NULLs (only `frequency_completed`/`monetary_gross` are NULL for those 23). Total returned was 5,875, not 5,852. The hypothesized 100-250 day density gap was not confirmed; a genuine, unhypothesized dip-then-rebound at 325-424 days was found instead.
+- **Query 100–101** (recency bump cohort): Confirmed the 350-424 day bump as a real, dateable Oct-Dec 2010 seasonal cohort — 618 customers, 91.4% with ≤5 orders, consistent with the previously established seasonal-acquisition finding. This pass verified only that aggregate figure — not Query 101's full four-bucket breakdown. That distinction matters: see "Revisiting Query 101," immediately below, for a further correction this pass did not catch.
+- **Query 102** (customer 17961 order history): WHAT block claimed ~120 completed orders / ~£24 average order value; actual pulled data showed 100 completed orders / £28.67 average. Resolved by Query 103's full-field export, which confirmed `frequency_completed = 100` directly from `customer_behavior_fields`.
+- **Query 104** (high-return/low-frequency cluster): WHY block claimed a "20-60%" return-rate range for the cluster; actual range (given the query's own `> 30` filter) was 30.8-80.0%. The referenced "moderate 0.41" full-population correlation figure has not been traced to its source query or independently verified within this retrofit. Separately, this pass retrofitted Query 104 with a full verified write-up — which directly contradicts Open Items' prior characterization of Query 104 as "explicitly deprioritized; not being actively pursued." Both claims are part of the historical record; see Open Items, below, for current status.
+- **Query 105** (recency-monetary funnel, fixed buckets): Same `WHERE recency_days IS NOT NULL` no-op as Query 99 (total 5,875, not 5,852) — a confirmed recurring pattern across two queries, worth checking for elsewhere (see Open Items). Original RESULT text also omitted the single largest MAX value in the table (£580,987.04, in the 0-49 day bucket) from its outlier discussion.
 - **Query 106** (recency-monetary funnel, quartile crosstab): Verified clean — all percentages and the 61-lapsed-whale figure confirmed exactly against the CSV. This query's embedded revision notice (citing Query 127's later supersession via the fixed dual-threshold definition, 58 customers) was preserved as-is, since it is part of the actual historical record rather than a forward citation introduced during this retrofit pass.
 
-## To-Do (as of July 21, 2026, 10pm — before git push)
+### Revisiting Query 101
 
-1. **Remaining SQL verification pass, queries 107 onward.** Not yet re-verified against pasted results in this session. These already carry the post-105 header format, so this is a RESULT/CONFIRMED FINDING accuracy pass (same treatment as 105/106), not a header retrofit.
-2. **Append-only notations still to be physically placed** in their original query write-ups (drafted in chat, not yet inserted into the canonical SQL files):
-   - Query 96: 243,007 → 228,297 correction, citing Query 97.
-   - Query 102: ~120 orders/~£24 avg → 100 orders/£28.67 avg correction, citing Query 103.
-3. **Query 59 open flag** (from the prior session's handoff) remains unresolved: the "47503J " trailing-space false positive was re-introduced by the Query 59 administrative-code exclusion amendment and never corrected in any of three subsequent `clean_transactions` amendments. Still open.
-4. **Query 104 status contradiction**: this log's Open Item 1 says Query 104 was deprioritized; this session's retrofit shows it was actually completed with a full write-up. Reconcile which is accurate.
-5. **Query 104's "moderate 0.41" correlation figure**: trace to source query and independently verify; not yet confirmed within this retrofit.
-6. **Recurring `WHERE recency_days IS NOT NULL` no-op pattern** (Queries 99, 105): worth a deliberate check across queries 107+ for the same mistaken exclusion claim, since it's now happened twice.
-7. **Chapter Four Tableau dashboard** — the active sprint deliverable, target July 26. Not addressed in this session.
+Query 101's frequency-bucket breakdown (259 / 306 / 45 / 8, see above) was re-verified while extending this chapter's exhibit lineup to the Nov 2010 Cohort, well after the header-retrofit pass above had already touched these same two queries. Pulling `frequency_completed` fresh from `customer_behavior_fields` for all 618 Nov 2010 Cohort customers (Query 181, `nov_2010_cohort_frequency_buckets_3d.html`) reproduced three of the four buckets exactly (259 / 306 / 45), but the 16+ orders bucket returned **5**, not the originally reported **8** — a 3-customer, 615-vs-618 total discrepancy. The gap is not explained by the 3 cancellation-only cohort members held out of this pull (consistent with this project's Never Converted handling): those customers carry `NULL` `frequency_completed` and could never have qualified for a 16+ bucket regardless.
+
+Two possible causes were checked. Field 2 (Frequency)'s two rebuilds (queries ~76–80, addressing administrative-code contamination and the 80,995-unit outlier) both predate Query 101, so Query 101 should already have been running against the corrected field — ruled out. The header-retrofit pass above did explicitly re-touch Queries 100–101, reporting "618 customers, 91.4% with ≤5 orders" — matching 565/618 (259 + 306) exactly — but confirmed only that aggregate figure, never the 6-15 or 16+ bucket counts specifically, where this discrepancy sits. So the retrofit did touch these queries, just at a coarser grain than the one now in question.
+
+This is a genuine shortfall against the retrofit's own stated standard, not just an unlucky miss: that pass's method is to append "RESULT and CONFIRMED FINDING blocks after verification against actual pasted data — never assumed." Verifying only the derived 91.4% aggregate, while leaving the query's full four-bucket result unchecked against the actual pasted data, does not meet that bar — a summary statistic is not the same as the underlying result it was computed from. Worth flagging as a pattern to watch for elsewhere across the 1–104 retrofit generally: a query's RESULT block being "confirmed" at the level of one summary figure doesn't guarantee every value in that query's original output was actually checked.
+
+**Cross-check supporting the corrected figure:** two of the five customers in the current 16+ bucket (16754: 29 orders, £54,692.82 net; 13564: 36 orders, £15,613.10 net) match `141_nov2010_cohort_high_spend_tail_list.csv` exactly, an independently-run pull — supporting the current 615-customer, 259/306/45/5 breakdown as accurate. Customer 16754 also independently matches Query 121's £54,692.82 finding from the funnel/lockstep verification pass, a third, fully independent corroboration.
+
+**Adopted for production use:** 259 / 306 / 45 / 5 (615 categorized; 3 cancellation-only customers held out), used in `nov_2010_cohort_frequency_buckets_3d.html`. Correspondingly, the ≤5-orders share is 91.4% unchanged (565/618, since the correction sits entirely inside the two upper buckets), but the 6+-orders share revises from the original 8.6% to **8.1%** (50/618). Query 101's original 259/306/45/8 remains documented at its original location above as the original discovery figure but is superseded for production use, per this project's standing rule that queries carry their own revision notation rather than being silently corrected.
+
+### Open Items
+
+Consolidated and current as of July 25, 2026 — carried forward from July 20's original list and the July 21 retrofit pass, deduplicated rather than repeated across multiple dated entries.
+
+1. **Query 104 status contradiction, unresolved.** The original Open Items list (July 20) characterized Query 104 as "explicitly deprioritized; not being actively pursued." The July 21 header-retrofit pass shows Query 104 was in fact completed with a full verified write-up that same session. Both statements are part of the historical record; which one accurately reflects the intended status has not been reconciled, and no source has been identified to check it against. Left open rather than guessed at.
+2. **Remaining SQL verification pass, queries 107 onward.** Not yet re-verified against pasted results. These already carry the post-105 header format, so this is a RESULT/CONFIRMED FINDING accuracy pass (same treatment as 105/106 above), not a header retrofit.
+3. **Recurring `WHERE recency_days IS NOT NULL` no-op pattern** (confirmed twice: Queries 99 and 105). Flagged July 21 as worth a deliberate check across queries 107+ for the same mistaken exclusion claim; that check has not yet been carried out.
+4. **Query 59's "47503J " trailing-space false positive.** Re-introduced by the Query 59 administrative-code exclusion amendment and never corrected in any of the three subsequent `clean_transactions` amendments. Still open; status unchanged since first flagged.
+5. **Query 104's "moderate 0.41" correlation figure.** Referenced in Query 104's WHY block; not yet traced to a source query or independently verified.
+6. **Append-only notations still owed in the canonical `/sql/` files** (distinct from this narrative document, where the corrected figures are already reflected): Query 96's 243,007 → 228,297 correction (citing Query 97) and Query 102's ~120 orders/~£24 avg → 100 orders/£28.67 avg correction (citing Query 103) were drafted during the July 21 retrofit but, as of that session, not yet physically inserted into the individual query files themselves. Status since then not confirmed.
+7. **Business recommendations section.** Drafted conversationally in a prior session (one recommendation per confirmed finding) but not yet written into this log as a formal section. Intentionally held until the MRP/inventory sprint (folding `unattributed_transactions` back in for stock-turnover and reorder-timing analysis) is complete, so recommendations can be written once against the full finding set rather than piecemeal.
+8. **Never Converted exhibit gallery — final lineup.** A dedicated exhibit was built (four variants: isolated base, colored by first-transaction-date, colored by attempt count, colored by recency); still open is which subset makes the final gallery, and under what filenames (see "Building the Never Converted Exhibit," above, for the full context).
+9. **Attempt-count tenure effect exhibit.** Query 135 confirmed a real, population-wide finding (attempt count is substantially tenure-driven) that doesn't yet have its own dedicated exhibit. Candidate for a Chapter Four view once the Never Converted lineup (item 8) is settled.
+10. **Stakeholder-communication test for interactive exhibits.** This project has tested whether 3D rotation helps *find* things, but not yet whether it helps *communicate* confirmed findings to someone who doesn't read SQL (see the Query 136 methodology note, above). Candidate: hand a finished exhibit to someone outside the analysis and see whether they arrive at the correct finding.
+11. **Chapter Four Tableau dashboard build.** The active sprint deliverable, target July 26, 2026. Substantial progress since this item was first logged (July 21) is tracked in `docs/chapter_four_calculated_fields.md` rather than duplicated here — that document is the current source of truth for dashboard/exhibit build status.
+
+**Resolved:**
+- ~~Gut-check exhibit gallery entry~~ — **RESOLVED.** `gutcheck_105_121_funnel_lockstep_review.html` (expanded from the original 105-119 range to include the veer-off closure and the 350-399 day spike resolution) is confirmed placed in `3dplots/` and linked from `index.html`, alongside caveat notations on the two Chapter Three exhibit descriptions it revises.
+- ~~Header-format retrofit, queries 1–106~~ — **RESOLVED**, per "Header-Format Retrofit and Verification Pass," above. Queries 107+ remain open as item 2, above.
 
 ---
 
-**Document version:** v48 — *In progress; this document is actively updated as the investigation continues. Version number increments with each substantive revision.*
+**Document version:** v50 — *In progress; this document is actively updated as the investigation continues. Version number increments with each substantive revision.*
 
 *This document is updated as each new phase of investigation is completed. Individual query documentation lives in `/sql/`; this file is the narrative connecting them.*
