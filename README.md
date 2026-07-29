@@ -5,7 +5,7 @@ Active learning and development work. Updated regularly — commit history refle
 
 ## In Progress
 
-## UK Online Retail II — Extraction Methodology & Data Forensics
+## [UK Online Retail II — Extraction Methodology & Data Forensics](https://github.com/CosbyCD/Current-Projects/tree/main/uk-retail-forensics)
 
 **Status:** Active | **Tools:** PostgreSQL · SQL · Nodal Display (in progress)
 
