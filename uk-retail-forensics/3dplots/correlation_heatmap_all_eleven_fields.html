@@ -6,47 +6,61 @@
 <title>Correlation Heatmap — All Eleven Fields — UK Online Retail II</title>
 <style>
   body {
-    background: #1a1815;
-    color: #d8d2c4;
-    font-family: 'Courier New', Courier, monospace;
+    background: #ffffff;
+    color: #2a2a2a;
+    font-family: 'Segoe UI', Arial, sans-serif;
     margin: 0;
-    padding: 40px 20px 80px;
+    padding: 16px 20px 30px;
   }
   .header {
-    max-width: 900px;
-    margin: 0 auto 32px;
-    border-bottom: 2px solid #8a6d3b;
-    padding-bottom: 20px;
+    max-width: 1000px;
+    margin: 0 auto 10px;
+    border-bottom: 2px solid #d8d2c4;
+    padding-bottom: 10px;
+    text-align: center;
   }
   .header h1 {
-    color: #c9a961;
-    font-size: 1.4em;
-    letter-spacing: 1px;
-    margin: 0 0 8px;
+    color: #2a2a2a;
+    font-size: 1.3em;
+    letter-spacing: 0.3px;
+    margin: 0 0 6px;
+    font-weight: 600;
   }
   .header p {
-    color: #a89f8c;
-    font-size: 0.9em;
-    line-height: 1.5;
+    color: #6b6b6b;
+    font-size: 0.82em;
+    line-height: 1.4;
     margin: 4px 0;
+    font-weight: bold;
+  }
+  .instructions {
+    font-weight: bold;
+    font-size: 0.82em;
+    line-height: 1.6;
+    margin: 12px auto 16px auto;
+    text-align: center;
   }
   .wrap-outer {
-    max-width: 900px;
+    max-width: 1000px;
     margin: 0 auto;
   }
   #heatmapWrap {
     overflow-x: auto;
-    background: #211f1a;
-    border: 1px solid #4a4438;
+    background: #ffffff;
+    border: 1px solid #d8d2c4;
     padding: 20px;
+    width: fit-content;
+    margin: 0 auto;
   }
   .legend {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 20px;
     margin-top: 16px;
     font-size: 12px;
-    color: #a89f8c;
+    color: #6b6b6b;
+    font-weight: bold;
   }
   .legend span.swatch {
     display: inline-block;
@@ -57,10 +71,10 @@
     vertical-align: -2px;
   }
   .footer {
-    max-width: 900px;
-    margin: 32px auto 0;
-    color: #6b6455;
-    font-size: 0.8em;
+    max-width: 1000px;
+    margin: 24px auto 0;
+    color: #9a9a9a;
+    font-size: 0.78em;
     text-align: center;
   }
 </style>
@@ -74,17 +88,18 @@
        committing to any specific 3D trio. Surfaced two genuinely identical pairs (interval
        whole-day/fractional-day; product variants/families) and flagged cancellation count,
        order return rate, and frequency as the trio worth building into a cube next.</p>
+    <p class="instructions">Hover a cell for its exact correlation value.</p>
   </div>
 
   <div id="heatmapWrap"></div>
 
   <div class="legend">
-    <span><span class="swatch" style="background: hsl(210, 60%, 40%);"></span>Positive correlation</span>
-    <span><span class="swatch" style="background: hsl(4, 65%, 40%);"></span>Negative correlation</span>
+    <span><span class="swatch" style="background: hsl(210, 65%, 55%);"></span>Positive correlation</span>
+    <span><span class="swatch" style="background: hsl(4, 70%, 58%);"></span>Negative correlation</span>
   </div>
 
   <div class="footer">
-    UK Online Retail II Forensics Project — Chapter Three — cyberphase.consulting
+    UK Online Retail II Forensics Project — Chapter Three Drill-Down Exhibit — cyberphase.consulting
   </div>
 </div>
 
@@ -94,16 +109,16 @@ const data = {"labels": ["recency", "frequency", "cancellations", "gross $", "ne
 function colorFor(v) {
   const t = Math.abs(v);
   if (v > 0.03) {
-    const l = Math.round(30 - t*14);
-    return `hsl(210, 60%, ${l}%)`;
+    const l = Math.round(92 - t*40);
+    return `hsl(210, 65%, ${l}%)`;
   } else if (v < -0.03) {
-    const l = Math.round(30 - t*14);
-    return `hsl(4, 65%, ${l}%)`;
+    const l = Math.round(92 - t*40);
+    return `hsl(4, 70%, ${l}%)`;
   }
-  return '#2a2822';
+  return '#f5f3ee';
 }
 function textColorFor(v) {
-  return Math.abs(v) > 0.5 ? '#f0ece0' : '#d8d2c4';
+  return Math.abs(v) > 0.5 ? '#ffffff' : '#2a2a2a';
 }
 
 const n = data.labels.length;
@@ -112,13 +127,13 @@ const labelCol = 110;
 let html = `<div style="display:grid; grid-template-columns:${labelCol}px repeat(${n}, ${cell}px); font-size:11px;">`;
 html += `<div></div>`;
 data.labels.forEach(l => {
-  html += `<div style="writing-mode:vertical-rl; transform:rotate(180deg); text-align:left; padding:4px 0; color:#a89f8c; font-size:10px;">${l}</div>`;
+  html += `<div style="writing-mode:vertical-rl; transform:rotate(180deg); text-align:left; padding:4px 0; color:#6b6b6b; font-size:10px;">${l}</div>`;
 });
 for (let i = 0; i < n; i++) {
-  html += `<div style="display:flex; align-items:center; padding-right:8px; color:#a89f8c; font-size:10px; justify-content:flex-end;">${data.labels[i]}</div>`;
+  html += `<div style="display:flex; align-items:center; padding-right:8px; color:#6b6b6b; font-size:10px; justify-content:flex-end;">${data.labels[i]}</div>`;
   for (let j = 0; j < n; j++) {
     const v = data.matrix[i][j];
-    html += `<div title="${data.labels[i]} vs ${data.labels[j]}: ${v}" style="width:${cell}px; height:${cell}px; display:flex; align-items:center; justify-content:center; background:${colorFor(v)}; color:${textColorFor(v)}; border:1px solid #1a1815; font-size:10px;">${v.toFixed(2)}</div>`;
+    html += `<div title="${data.labels[i]} vs ${data.labels[j]}: ${v}" style="width:${cell}px; height:${cell}px; display:flex; align-items:center; justify-content:center; background:${colorFor(v)}; color:${textColorFor(v)}; border:1px solid #ffffff; font-size:10px;">${v.toFixed(2)}</div>`;
   }
 }
 html += `</div>`;

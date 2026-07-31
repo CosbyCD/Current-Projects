@@ -26,6 +26,7 @@
     margin: 0 auto 10px;
     border-bottom: 2px solid #d8d2c4;
     padding-bottom: 10px;
+    text-align: center;
   }
   .header h1 {
     color: #2a2a2a;
@@ -39,6 +40,31 @@
     font-size: 0.82em;
     line-height: 1.4;
     margin: 3px 0;
+  }
+  .instructions {
+    font-weight: bold;
+    font-size: 0.82em;
+    line-height: 1.6;
+    margin: 12px auto 4px auto;
+    text-align: center;
+  }
+  .instructions .legend-note {
+    font-weight: normal;
+    color: #6b6b6b;
+    display: block;
+    margin-top: 4px;
+  }
+  .amber-note {
+    max-width: 1100px;
+    margin: 8px auto 0;
+    padding: 6px 10px;
+    background: #fff8e1;
+    border: 1px solid #f0c14b;
+    border-radius: 4px;
+    color: #7a5c00;
+    font-size: 0.78em;
+    line-height: 1.4;
+    text-align: left;
   }
   .wrap { max-width: 1100px; margin: 0 auto; }
   .chart { width: 100%; height: 82vh; }
@@ -73,12 +99,22 @@
   <div class="header">
     <h1>Nov 2010 Cohort — Acquisition Month (Bucketed)</h1>
     <p>All 615 Nov 2010 Cohort customers (last_order_date in Oct/Nov/Dec 2010 — the cohort's defining trait), colored by when each customer's <em>first</em> purchase occurred: the three defining months themselves, plus everyone acquired earlier, back to Dec 2009 in this dataset. X = recency (days), Y = frequency (completed orders), Z = monetary_net (&pound;, log scale).</p>
-    <p><strong>Drag to rotate. Hover for details. Click for granularity.<br>Click a legend entry to hide/show that group; double-click a legend entry to isolate it and gray out the rest &mdash; double-click again to restore all groups.<br>Toggle "Pan" to grab and move the view if data scrolls off screen when zoomed in. Use "Capture" to save a PNG of exactly what's on screen &mdash; your current zoom, rotation, and pan position included. Use "Reset" to return to the default view and rotate mode.</strong></p>
-  </div>
-
-  <div style="position:relative; margin-top:-88px;">
+    <p class="instructions">Drag to rotate. Scroll to zoom. Hover for details.
+       <span class="legend-note">Click a legend entry to hide or show that group. Double-click to isolate it — double-click again to
+       restore all groups.</span>
+       <span class="legend-note">Toggle "Pan" to grab and move the view if data scrolls off screen when zoomed in. Use "Capture" to save
+       a PNG of exactly what's on screen — your current zoom, rotation, and pan position included. Use "Reset"
+       to return to the default view and rotate mode.</span></p>
+    <div class="amber-note">
+      <strong>Note:</strong> this exhibit's population is 615, not the full 618-customer cohort — 3 cancellation-only
+      customers (NULL frequency_completed) are held out, landing one each in the Oct/Nov/Dec first-purchase buckets
+      (0 in Pre-Oct). This creates an expected, documented 1-count-per-bucket gap between this exhibit's legend
+      (305/123/153/34) and Tableau's full-cohort count (305/124/154/35) — confirmed not a name swap or bucketing bug.
+      See investigation_log.md, "Revisiting Query 101" section, for the full trace.
+    </div>
+  </div>  <div style="position:relative; margin-top:-116px;">
     <div id="chart" class="chart"></div>
-    <div style="position:absolute; top:118px; right:8px; z-index:10; display:flex; gap:6px;">
+    <div style="position:absolute; top:116px; right:8px; z-index:10; display:flex; gap:6px;">
       <button id="resetViewBtn" title="Reset View" style="
         background:rgba(255,255,255,0.92); border:1px solid #d8d2c4; color:#2a2a2a;
         font-family:'Segoe UI', Arial, sans-serif; font-size:0.8em;
@@ -159,7 +195,7 @@ const layout = {
   margin: { l: 0, r: 0, t: 10, b: 0 },
   showlegend: true,
   legend: {
-    x: 0.02, y: 0.90, xanchor: 'left', yanchor: 'top',
+    x: 0.02, y: 0.78, xanchor: 'left', yanchor: 'top',
     bgcolor: 'rgba(255,255,255,0.9)',
     bordercolor: '#d8d2c4', borderwidth: 1,
     font: { size: 11 }

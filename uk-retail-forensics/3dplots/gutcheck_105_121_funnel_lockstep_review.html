@@ -2,67 +2,73 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Gut-Check Exhibits — Queries 105-121</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.32.0/plotly.min.js"></script>
 <style>
   body {
-    background: #1a1815;
-    color: #d8d2c4;
-    font-family: 'Courier New', Courier, monospace;
+    background: #ffffff;
+    color: #2a2a2a;
+    font-family: 'Segoe UI', Arial, sans-serif;
     margin: 0;
-    padding: 40px 20px 80px;
+    padding: 16px 20px 30px;
   }
   .header {
     max-width: 1000px;
-    margin: 0 auto 40px;
-    border-bottom: 2px solid #8a6d3b;
-    padding-bottom: 20px;
+    margin: 0 auto 32px;
+    border-bottom: 2px solid #d8d2c4;
+    padding-bottom: 10px;
+    text-align: center;
   }
   .header h1 {
-    color: #c9a961;
-    font-size: 1.6em;
-    letter-spacing: 1px;
-    margin: 0 0 8px;
+    color: #2a2a2a;
+    font-size: 1.3em;
+    letter-spacing: 0.3px;
+    margin: 0 0 6px;
+    font-weight: 600;
   }
   .header p {
-    color: #a89f8c;
-    font-size: 0.9em;
-    line-height: 1.5;
+    color: #6b6b6b;
+    font-size: 0.82em;
+    line-height: 1.4;
     margin: 4px 0;
+    font-weight: bold;
   }
   .exhibit {
     max-width: 1000px;
-    margin: 0 auto 60px;
-    border: 1px solid #4a4438;
-    background: #211f1a;
+    margin: 0 auto 40px;
+    border: 1px solid #d8d2c4;
+    background: #ffffff;
     padding: 24px;
   }
   .exhibit-label {
-    color: #8a6d3b;
+    color: #9a8a5c;
     font-size: 0.75em;
     letter-spacing: 2px;
     text-transform: uppercase;
     margin-bottom: 6px;
+    font-weight: bold;
   }
   .exhibit-title {
-    color: #d8d2c4;
+    color: #2a2a2a;
     font-size: 1.15em;
     margin: 0 0 4px;
+    font-weight: 600;
   }
   .exhibit-note {
-    color: #a89f8c;
+    color: #6b6b6b;
     font-size: 0.85em;
     line-height: 1.5;
     margin: 8px 0 18px;
-    border-left: 2px solid #8a6d3b;
+    border-left: 2px solid #d8d2c4;
     padding-left: 12px;
   }
   .chart { width: 100%; height: 420px; }
   .footer {
     max-width: 1000px;
-    margin: 40px auto 0;
-    color: #6b6455;
-    font-size: 0.8em;
+    margin: 24px auto 0;
+    color: #9a9a9a;
+    font-size: 0.78em;
     text-align: center;
   }
 </style>
@@ -153,9 +159,9 @@
 
 <script>
 const paperBg = 'rgba(0,0,0,0)';
-const gridColor = '#3a352c';
-const fontColor = '#d8d2c4';
-const axisFont = {family: 'Courier New, monospace', color: fontColor, size: 12};
+const gridColor = '#e5e2da';
+const fontColor = '#6b6b6b';
+const axisFont = {family: 'Segoe UI, Arial, sans-serif', color: fontColor, size: 12};
 const baseLayout = {
   paper_bgcolor: paperBg,
   plot_bgcolor: paperBg,
@@ -205,7 +211,7 @@ Plotly.newPlot('chart5', [
 
 const top20Ids = ['18102','14646','14156','14911','17450','13694','17511','16684','12415','15061','15311','13089','16029','17949','12931','14298','15769','12346','13798','15838'];
 const top20Recency = [0,1,9,0,7,3,2,3,23,3,0,2,38,0,21,2,6,325,0,10];
-const top20Colors = top20Ids.map(id => id === '12346' ? '#c3564a' : '#6b6455');
+const top20Colors = top20Ids.map(id => id === '12346' ? '#c3564a' : '#9a8a5c');
 
 Plotly.newPlot('chart6', [
   {x: top20Ids, y: top20Recency, type: 'bar', marker: {color: top20Colors}, name: 'Recency (days)'}

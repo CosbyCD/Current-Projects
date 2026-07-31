@@ -6,29 +6,39 @@
 <title>Customer 17961 — Order History</title>
 <style>
   body {
+    background: #ffffff;
+    color: #2a2a2a;
+    font-family: 'Segoe UI', Arial, sans-serif;
     margin: 0;
-    padding: 32px;
-    background: #14171c;
-    color: #ede8da;
-    font-family: 'Inter', -apple-system, sans-serif;
+    padding: 16px 20px 30px;
   }
-  h1 {
-    font-family: 'Newsreader', Georgia, serif;
-    font-weight: 500;
-    font-size: 22px;
-    margin: 0 0 4px;
+  .header {
+    max-width: 1000px;
+    margin: 0 auto 10px;
+    border-bottom: 2px solid #d8d2c4;
+    padding-bottom: 10px;
+    text-align: center;
   }
-  p.sub {
-    color: #cfc7ac;
-    font-size: 14px;
-    margin: 0 0 24px;
+  .header h1 {
+    color: #2a2a2a;
+    font-size: 1.3em;
+    letter-spacing: 0.3px;
+    margin: 0 0 6px;
+    font-weight: 600;
+  }
+  .header p {
+    color: #6b6b6b;
+    font-size: 0.82em;
+    line-height: 1.4;
+    margin: 4px 0;
+    font-weight: bold;
   }
   .chart-wrap {
     position: relative;
     width: 100%;
-    max-width: 900px;
+    max-width: 1000px;
     height: 420px;
-    margin: 0 auto;
+    margin: 20px auto 0;
   }
   .legend {
     display: flex;
@@ -36,15 +46,27 @@
     justify-content: center;
     margin-top: 16px;
     font-size: 13px;
-    color: #cfc7ac;
+    color: #6b6b6b;
+    font-weight: bold;
   }
   .legend span { display: flex; align-items: center; gap: 6px; }
   .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .footer {
+    max-width: 1000px;
+    margin: 24px auto 0;
+    color: #9a9a9a;
+    font-size: 0.78em;
+    text-align: center;
+  }
 </style>
 </head>
 <body>
-<h1>Customer 17961 — order history</h1>
-<p class="sub">Order totals over time, Dec 2009 &ndash; Nov 2011. Resolved as a small retailer with a recurring seasonal restocking pattern, not a data quality issue.</p>
+
+<div class="header">
+  <h1>Customer 17961 — Order History</h1>
+  <p>Order totals over time, Dec 2009&ndash;Nov 2011. Resolved as a small retailer with a recurring seasonal restocking pattern, not a data quality issue.</p>
+</div>
+
 <div class="chart-wrap">
   <canvas id="ordersChart" role="img" aria-label="Scatter chart of customer 17961's order totals over time from December 2009 to November 2011, showing mostly small orders under 50 pounds with two large outlier orders near 200 and 500 pounds, and two small cancellation orders shown as negative values"></canvas>
 </div>
@@ -157,6 +179,7 @@ const rows = [
 ["577382","2011-11-18",1.70],["577382","2011-11-18",3.90],["577382","2011-11-18",6.80],
 ["577387","2011-11-18",4.25]
 ];
+
 const orders = {};
 rows.forEach(([inv, date, total]) => {
   if (!orders[inv]) orders[inv] = { date, total: 0, isCancel: inv.startsWith('C') };
@@ -179,12 +202,18 @@ new Chart(document.getElementById('ordersChart'), {
     responsive: true,
     maintainAspectRatio: false,
     scales: {
-      x: { type: 'time', time: { unit: 'month' }, ticks: { color: '#cfc7ac', font: { size: 10 } }, grid: { color: 'rgba(237,232,218,0.08)' } },
-      y: { title: { display: true, text: 'Order total (£)', color: '#cfc7ac' }, ticks: { color: '#cfc7ac' }, grid: { color: 'rgba(237,232,218,0.08)' } }
+      x: { type: 'time', time: { unit: 'month' }, ticks: { color: '#6b6b6b', font: { size: 10 } }, grid: { color: '#e5e2da' } },
+      y: { title: { display: true, text: 'Order total (£)', color: '#6b6b6b' }, ticks: { color: '#6b6b6b' }, grid: { color: '#e5e2da' } }
     },
     plugins: { legend: { display: false } }
   }
 });
+
 </script>
+
+<div class="footer">
+  UK Online Retail II Forensics Project — Chapter Three Drill-Down Exhibit — cyberphase.consulting
+</div>
+
 </body>
 </html>

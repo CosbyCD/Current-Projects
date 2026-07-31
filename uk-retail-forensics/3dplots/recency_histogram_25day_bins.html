@@ -1,7 +1,87 @@
-<div style="position: relative; width: 100%; height: 340px;">
-  <canvas id="recencyChart" role="img" aria-label="Bar chart of customer count by 25-day recency bucket, showing smooth decay from 0-24 days through roughly 325-349 days, then an anomalous rise peaking at 375-399 days before resuming decay">Recency histogram: counts decay from 1518 at 0-24 days down to 41 at 325-349 days, then rise to 258 at 375-399 days, before resuming decay to the 700-749 day range.</canvas>
-</div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recency Distribution — 25-Day Bins — UK Online Retail II</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  body {
+    background: #ffffff;
+    color: #2a2a2a;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    margin: 0;
+    padding: 16px 20px 30px;
+  }
+  .header {
+    max-width: 1100px;
+    margin: 0 auto 10px;
+    border-bottom: 2px solid #d8d2c4;
+    padding-bottom: 10px;
+    text-align: center;
+  }
+  .header h1 {
+    color: #2a2a2a;
+    font-size: 1.3em;
+    letter-spacing: 0.3px;
+    margin: 0 0 6px;
+    font-weight: 600;
+  }
+  .header p {
+    color: #6b6b6b;
+    font-size: 0.82em;
+    line-height: 1.4;
+    margin: 3px 0;
+  }
+  .instructions {
+    font-weight: bold;
+    font-size: 0.82em;
+    line-height: 1.6;
+    margin: 12px auto 4px auto;
+    text-align: center;
+  }
+  .instructions .legend-note {
+    font-weight: normal;
+    color: #6b6b6b;
+    display: block;
+    margin-top: 4px;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; }
+  .chart-container { position: relative; width: 100%; height: 60vh; margin-top: 10px; }
+  .footer {
+    max-width: 1100px;
+    margin: 24px auto 0;
+    color: #9a9a9a;
+    font-size: 0.78em;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="header">
+    <h1>Recency Distribution — 25-Day Bins</h1>
+    <p>5,852 customers (excludes the 23 Never Converted, who have no completed orders to derive recency
+       from) bucketed into 25-day recency windows. Counts decay smoothly from 1,518 at 0&ndash;24 days down
+       to 41 at 325&ndash;349 days &mdash; then break pattern: a confirmed anomaly (highlighted in red,
+       350&ndash;424 days, peaking at 258 in the 375&ndash;399 bucket) before decay resumes. SQL-confirmed
+       (Queries 99&ndash;101): this bump is the Nov 2010 Cohort &mdash; 618 customers whose last purchase
+       clustered Oct/Nov/Dec 2010 (180/307/131), consistent with wholesale/gift retailers stocking ahead of
+       Christmas 2010 and not returning afterward. This is the same cohort explored in depth across the Nov
+       2010 Cohort exhibit set.</p>
+    <p class="instructions">Hover a bar for its exact count.</p>
+  </div>
+
+  <div class="chart-container">
+    <canvas id="recencyChart" role="img" aria-label="Bar chart of customer count by 25-day recency bucket, showing smooth decay from 0-24 days through roughly 325-349 days, then an anomalous rise peaking at 375-399 days before resuming decay">Recency histogram: counts decay from 1518 at 0-24 days down to 41 at 325-349 days, then rise to 258 at 375-399 days, before resuming decay to the 700-749 day range.</canvas>
+  </div>
+
+  <div class="footer">
+    UK Online Retail II Forensics Project — Chapter Three Drill-Down Exhibit — cyberphase.consulting
+  </div>
+</div>
+
 <script>
 const labels = ["0-24","25-49","50-74","75-99","100-124","125-149","150-174","175-199","200-224","225-249","250-274","275-299","300-324","325-349","350-374","375-399","400-424","425-449","450-474","475-499","500-524","525-549","550-574","575-599","600-624","625-649","650-674","675-699","700-724","725-749"];
 const counts = [1518,680,531,267,167,143,159,145,123,123,127,96,111,41,152,258,208,150,110,70,86,85,73,97,72,70,64,47,32,70];
@@ -21,3 +101,6 @@ new Chart(document.getElementById('recencyChart'), {
   }
 });
 </script>
+
+</body>
+</html>

@@ -9,6 +9,7 @@
     margin: 0 auto 10px;
     border-bottom: 2px solid #d8d2c4;
     padding: 0 0 10px;
+    text-align: center;
   }
   .header h1 {
     color: #2a2a2a;
@@ -23,6 +24,19 @@
     line-height: 1.4;
     margin: 3px 0;
   }
+  .instructions {
+    font-weight: bold;
+    font-size: 0.82em;
+    line-height: 1.6;
+    margin: 12px auto 16px auto;
+    text-align: center;
+  }
+  .instructions .legend-note {
+    font-weight: normal;
+    color: #6b6b6b;
+    display: block;
+    margin-top: 4px;
+  }
   .wrap { max-width: 1100px; margin: 0 auto; }
   .footer {
     max-width: 1100px;
@@ -31,7 +45,7 @@
     font-size: 0.78em;
     text-align: center;
   }
-  #chart { width:100%; height:68vh; }
+  #chart { width:100%; height:82vh; }
 </style>
 </head>
 <body>
@@ -42,14 +56,14 @@
      dedicated exhibit. X = recency (days since last order), Y = frequency (completed orders), Z = monetary gross
      (£, log scale, since spend spans several orders of magnitude across the population). Color = log10(monetary
      gross), matching the Z axis.</p>
-  <p><strong>Drag to rotate. Hover for details. Click for granularity.<br>
-     Toggle "Pan" to grab and move the view if data scrolls off
-     screen when zoomed in. Use "Capture" to save a PNG of exactly what's on screen — your current zoom,
-     rotation, and pan position included. Use "Reset" to return to the default view and rotate mode.</strong></p>
+  <p class="instructions">Drag to rotate. Scroll to zoom. Hover for details.
+     <span class="legend-note">Toggle "Pan" to grab and move the view if data scrolls off screen when zoomed in. Use "Capture" to save
+     a PNG of exactly what's on screen — your current zoom, rotation, and pan position included. Use "Reset"
+     to return to the default view and rotate mode.</span></p>
 </div>
-<div style="position:relative;">
+<div style="position:relative; margin-top:-96px;">
   <div id="chart"></div>
-  <div style="position:absolute; top:48px; right:8px; z-index:10; display:flex; gap:6px;">
+  <div style="position:absolute; top:118px; right:8px; z-index:10; display:flex; gap:6px;">
     <button id="resetViewBtn" title="Reset View" style="
       background:rgba(255,255,255,0.92); border:1px solid #d8d2c4; color:#2a2a2a;
       font-family:'Segoe UI', Arial, sans-serif; font-size:0.8em;
