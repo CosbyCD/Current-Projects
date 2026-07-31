@@ -53,3 +53,35 @@ LIMIT 30;
 -- absent well beyond their own established pattern. This is the
 -- restocking-priority half of Phase 4; see Query 163 for the
 -- complementary dead-stock/write-off candidate list.
+
+-- [FLAGGED] This query was likely run before stock_behavior_fields was
+-- rebuilt against the corrected full_transactions (Query 159's
+-- reconstruction, confirmed clean at Query 160). The WHERE and ORDER BY
+-- logic here uses only recency_days, frequency_completed, and
+-- avg_interval_fractional_day -- all three already confirmed unaffected
+-- by the double-counting bug (Queries 153, 154, 156) -- so the set of
+-- 30 SKUs selected and their overdue_multiple ranking is NOT at risk
+-- and will be identical regardless of when this ran. The one column
+-- that IS at risk is monetary_net, pulled directly from
+-- stock_behavior_fields and confirmed affected by the bug (Query 155).
+-- If this was run pre-fix, the net-revenue figures cited for 37503,
+-- 22528, 79029, and 47568 are stale display values, not selection-
+-- affecting ones. Needs a rerun to refresh monetary_net only -- the SKU
+-- list itself does not need re-deriving.
+
+-- [CONFIRMED via rerun against the rebuilt stock_behavior_fields]
+-- Exactly as predicted: identical 30 SKUs, identical order, identical
+-- overdue_multiple for every row -- this finding's structure was never
+-- actually at risk. Every monetary_net value decreased (never
+-- increased), consistent with the duplication having inflated all of
+-- them. Corrected figures for the four standout SKUs named in the
+-- original write-up: 37503 £26,556.41 -> £24,912.88 (-£1,643.53), 22528
+-- £8,860.74 -> £7,567.16 (-£1,293.58), 79029 £5,825.14 -> £5,424.47
+-- (-£400.67), 47568 £5,442.29 -> £4,938.05 (-£504.24). Largest single
+-- correction in this list: 21780, -£910.30. All 30 corrections ranged
+-- -£1.72 to -£1,643.53, no exceptions. The CONFIRMED FINDING above
+-- (relative overdue-signal methodology, standout SKU identities) stands
+-- unchanged -- only the cited net-revenue dollar figures needed
+-- updating, which should be swapped for the corrected values above
+-- wherever this finding is referenced downstream (storyboard,
+-- README, etc.).

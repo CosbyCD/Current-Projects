@@ -51,3 +51,16 @@ ORDER BY stock_code;
 -- (recency_days, Query 153) significantly exceeds its own historical
 -- avg_interval is the concrete "overdue" signal this sprint is built to
 -- surface.
+
+-- [ADDENDUM] This query was run against full_transactions before the
+-- double-counting bug (confirmed and fixed at Queries 151b/151c/151d)
+-- was corrected. Structurally reasoned to be unaffected: the order_dates
+-- CTE is built on SELECT DISTINCT stock_code, invoice_no -- duplicating
+-- a row cannot manufacture a new distinct (stock_code, invoice_no) pair,
+-- and MIN(invoice_date) for that pair is unaffected by duplicates, the
+-- same reasoning that held for Queries 153 and 154. Independently
+-- confirmed by rerunning this exact query against the corrected
+-- full_transactions and diffing the two outputs directly: 4,598 rows in
+-- both runs, identical stock_code sets, zero value differences across
+-- avg_interval_whole_day and avg_interval_fractional_day. Not an
+-- assumption -- verified, same standard applied as Queries 153 and 154.

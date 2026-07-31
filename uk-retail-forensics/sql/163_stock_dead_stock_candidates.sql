@@ -73,3 +73,51 @@ LIMIT 30;
 -- for seasonal restocking. Only the remaining 108 SKUs (201 minus the
 -- 93 seasonal ones) are genuine gift-bonus-clearance candidates. See
 -- Query 165 for the full account.]
+-- [FLAGGED] This query was likely run before stock_behavior_fields was
+-- rebuilt against the corrected full_transactions (Query 159's
+-- reconstruction, confirmed clean at Query 160). GOOD NEWS FIRST: the
+-- 201-SKU population count itself is structurally SAFE -- the WHERE
+-- clause filters only on recency_days and frequency_completed, both
+-- already confirmed unaffected by the double-counting bug (Queries
+-- 153, 154). monetary_net never appears in WHERE, so it cannot have
+-- changed which SKUs qualify or the total count. This means the
+-- headline 201 figure (and its downstream 93/108 split at Query 165,
+-- pending its own review) was very likely never actually at risk.
+--
+-- Two things still need confirming via rerun, not just reasoning:
+-- (1) The top-30 DISPLAY here uses monetary_net as an ORDER BY
+-- tiebreaker after recency_days. This CSV has heavy ties (7 SKUs at
+-- 737 days, 9 at 736) -- if corrected monetary_net reorders any tied
+-- group straddling the LIMIT 30 cutoff, a different SKU could appear
+-- in the top 30 than shown here. Not reasoned safe -- needs an actual
+-- rerun to confirm the exact 30-row set and order are unchanged.
+-- (2) Every displayed monetary_net value is a stale, pre-fix figure and
+-- needs refreshing regardless of whether the row set changes.
+-- The £14,025.45 aggregate value (cited from Query 164) is a
+-- SUM(monetary_net) across the full 201 population -- confirmed
+-- affected, will need recalculating when Query 164 is reviewed.
+
+-- [CONFIRMED via rerun against the rebuilt stock_behavior_fields]
+-- SKU membership: identical -- all 30 SKUs from the original top-30
+-- appear in the corrected top-30, zero additions or drops. Confirms the
+-- 201-SKU population itself was never actually at risk, exactly as
+-- structurally reasoned above.
+--
+-- Display order: DID shift within tied recency groups, exactly as
+-- flagged. Most visibly: at 737 days (7-way tie), 84648 moved from 4th
+-- to 2nd place because its monetary_net (12.75, unaffected -- likely no
+-- unattributed activity for this SKU) stayed put while 79070B (22.52 ->
+-- 11.26, exactly halved) and 20739 (17.30 -> 8.65, exactly halved) both
+-- corrected downward past it. Several SKUs show an exact 50% reduction
+-- (79070B, 20739, 30086C, 20737, 21860, 84814B) -- consistent with
+-- those specific SKUs' entire displayed order having originated from a
+-- single duplicated unattributed transaction, cleanly halved once the
+-- duplicate was removed.
+--
+-- CONFIRMED: this finding's substance is fully intact. The 201-SKU dead
+-- -stock population, and by extension its downstream 93-seasonal and
+-- 108-genuine splits (Query 165, still pending its own review), were
+-- never at risk from the bug -- only this display's internal ordering
+-- and dollar values needed correcting, which is now done. The corrected
+-- top-30 order and values above should replace the original table
+-- wherever this finding is cited going forward.

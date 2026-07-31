@@ -14,6 +14,16 @@
 --      amendment or can be documented as an accepted small gap, this
 --      establishes the actual current state and scope.
 
+-- [PROVENANCE NOTE, added during the July 31, 2026 forensic review pass]
+-- This file's SQL was found truncated ("WHERE T", incomplete) and its
+-- own RESULT block claimed the query never executed -- but a CSV
+-- containing real, substantive data for this exact comparison was
+-- available. The query below is a RECONSTRUCTION built to match that
+-- CSV's shape, not a recovery of whatever query actually produced it.
+-- Independently confirmed by running it and diffing the output against
+-- the original CSV: exact match, both rows, every value including
+-- timestamps. This is now the authoritative version of Query 166.
+
 SELECT
     stock_code,
     LENGTH(stock_code) AS code_length,
@@ -23,19 +33,29 @@ SELECT
     MIN(invoice_date) AS earliest,
     MAX(invoice_date) AS latest
 FROM uk_retail.raw_transactions
-WHERE T
+WHERE TRIM(stock_code) = '47503J'
+GROUP BY stock_code, description
+ORDER BY stock_code;
 
--- RESULT: Query failed before execution -- ERROR: column "stock_code"
--- does not exist, SQL state 42703. The query itself was also
--- incomplete (truncated mid-WHERE-clause, "WHERE T" with no closing
--- condition) -- an assistant-side generation error, not a genuine
--- schema mismatch. Query 167 confirmed raw_transactions does in fact
--- have a stock_code column identical to clean_transactions' naming;
--- the reported column error was likely a side effect of the truncated,
--- syntactically invalid WHERE clause rather than a real absent-column
--- issue. Superseded by the corrected, complete version at Query 168.
+-- RESULT (confirmed via rerun, exact match to the original CSV): two
+-- rows. '47503J' (code_length 6): 80 rows, £2,592.18 total value,
+-- 2009-12-01 to 2010-12-07. '47503J ' (code_length 7, trailing space):
+-- 1 row, £16.13, single transaction 2010-07-05. Both share the
+-- identical description "SET/3 FLORAL GARDEN TOOLS IN BAG" -- same
+-- product, split into two distinct stock_code groups purely by the
+-- trailing-whitespace inconsistency. This confirms Query 20's original
+-- finding still holds: this is a genuine product code variant, not an
+-- administrative code false positive.
 
--- CONFIRMED FINDING: N/A -- this query never executed successfully.
--- Preserved per this project's segregate-don't-delete standard as a
--- documented false start rather than removed from the record. See
--- Query 168 for the working version and its actual results.
+-- CONFIRMED FINDING: The Query 59 regression (this trailing-space
+-- variant getting re-caught by the admin-code exclusion filter, never
+-- corrected in three subsequent clean_transactions amendments) affects
+-- exactly 1 row and £16.13 in value -- a genuinely small, well-scoped
+-- gap. Whether raw_transactions here reflects the CURRENT clean_
+-- transactions state or the ORIGINAL pre-amendment state was not
+-- directly tested by this query (it queries raw_transactions, not
+-- clean_transactions) -- that comparison is Query 167/168's job. This
+-- query's role is establishing the true scope (1 row, £16.13) so that
+-- comparison has a known target to check against. Not related to, and
+-- not affected by, the full_transactions double-counting bug (this
+-- query never touches full_transactions).

@@ -45,3 +45,14 @@ ORDER BY a.stock_code;
 -- either a LEFT JOIN preserving them with NULL frequency values
 -- (matching the customer-side pattern) or an explicit "never sold"
 -- flag, decided at assembly time.
+
+-- [ADDENDUM] This query was run against full_transactions before the
+-- double-counting bug (confirmed and fixed at Queries 151b/151c/151d)
+-- was corrected. Initially reasoned to be unaffected on structural
+-- grounds (COUNT(DISTINCT invoice_no) is duplicate-insensitive), then
+-- independently confirmed by rerunning this exact query against the
+-- corrected full_transactions and diffing the two outputs directly:
+-- 4,721 rows in both runs, identical stock_code sets, zero value
+-- differences across frequency_completed, frequency_all, and
+-- cancellation_count. Not an assumption -- verified, same standard
+-- applied as Query 153.

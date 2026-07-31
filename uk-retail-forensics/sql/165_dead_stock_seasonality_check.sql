@@ -76,3 +76,44 @@ ORDER BY t.total_orders DESC, om.stock_code;
 -- original two-finding structure (Query 162 restock signal, Query
 -- 163/164 dead-stock signal) would have shipped an incomplete
 -- recommendation without this check.
+-- [FLAGGED -- two separate issues]
+-- (1) Pre-existing discrepancy, unrelated to the double-counting bug:
+-- the RESULT block above states "Only 3 of the 93 fall in November"
+-- but then names FOUR stock codes (15002, 37477C, 90142B, 90142C), and
+-- the CSV independently confirms 4 November rows, not 3. The named
+-- list is correct; the "3" figure is a miscount in the prose. Should be
+-- corrected to "4" wherever this finding is cited.
+-- (2) Bug exposure: this query was run against full_transactions before
+-- the double-counting bug (confirmed and fixed at Queries 151b/151c/
+-- 151d) was corrected. Structurally reasoned to be duplicate-insensitive
+-- -- built entirely on COUNT(DISTINCT invoice_no) per stock_code per
+-- month, filtered through the dead_stock CTE which uses only
+-- recency_days and frequency_completed (both confirmed unaffected). No
+-- monetary values anywhere in this query. Same shape as Query 154,
+-- already confirmed safe. NOT yet independently verified by rerun --
+-- needs the same rerun-and-diff treatment as every other field this
+-- session, not just reasoning, before the 93/108 split can be called
+-- fully confirmed.
+
+-- [CONFIRMED via rerun against the rebuilt full_transactions/
+-- stock_behavior_fields] Identical result: 93 SKUs, exact same set as
+-- the original (zero additions, zero drops), same 4-SKU November group
+-- (15002, 37477C, 90142B, 90142C -- confirming the "3" in the original
+-- prose was a miscount, corrected to 4 above). The seasonality
+-- safeguard, and by extension the 93-seasonal/108-genuine dead-stock
+-- split, was never actually at risk from the double-counting bug --
+-- COUNT(DISTINCT invoice_no) proved duplicate-insensitive here exactly
+-- as it did at Query 154.
+--
+-- THIS CLOSES THE FULL CHAPTER FIVE HEADLINE-FINDING RE-VERIFICATION
+-- CHAIN. Final status of the three headline figures: 572 Overdue Restock
+-- (Query 162's underlying population -- not yet directly re-run as its
+-- own count, but built on the same confirmed-safe recency/frequency
+-- logic as everything else in this chapter; worth a final direct check
+-- before formally closing), 93 Seasonal Dormant (CONFIRMED unchanged,
+-- this query), 108 Dead Stock (CONFIRMED unchanged: 201 total - 93
+-- seasonal = 108, both components independently confirmed). Only dollar
+-- figures needed correcting throughout (Query 155's monetary field,
+-- Query 158's line-item return rate, and their downstream aggregates at
+-- Queries 162/164) -- every population count and SKU-identity finding
+-- in this chapter survived the bug fully intact.

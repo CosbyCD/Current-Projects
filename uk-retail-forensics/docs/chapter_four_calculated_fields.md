@@ -200,7 +200,7 @@ END
 
 **WHAT:** Flags each SKU as belonging to the "Overdue Restock" population, per Query 174's retightened definition (8x overdue multiple, £1,000 net value floor — superseding Query 172's too-loose 3x threshold).
 
-**WHY:** The Chapter Five Overdue Restock worksheet needs a filterable field that isolates exactly the 572-SKU population confirmed in Query 174, rather than showing all 4,734 SKUs in `stock_behavior_fields`. Query 174's Dead Stock Candidate / Seasonal Dormant split requires `full_transactions` (invoice-month data via the `seasonal_skus` subquery) and is deferred to a follow-up field once that worksheet is built; this field currently collapses both into a single "Dead Stock / Seasonal Dormant" bucket, since only Overdue Restock isolation was needed for this worksheet.
+**WHY:** The Chapter Five Overdue Restock worksheet needs a filterable field that isolates exactly the 572-SKU population confirmed in Query 174, rather than showing all 4,734 SKUs in `stock_behavior_fields`. Query 174's Dead Stock Candidate / Seasonal Dormant split requires `full_transactions` (invoice-month data via the `seasonal_skus` subquery) and is deferred to a follow-up field once that worksheet is built; this field currently collapses both into a single "Dead Stock / Seasonal Dormant" bucket, since only Overdue Restock isolation was needed for this worksheet. **[Population corrected to 513, July 31, 2026 — see the Result block below.]**
 
 **Formula:**
 ```
@@ -217,6 +217,8 @@ END
 **Verification:** Filtered to "Overdue Restock" only, counted marks with Stock Code on Detail.
 
 **Result:** ✅ Passed — **572** SKUs, matching Query 174 exactly (confirmed against the `174_phase5_exhibit_data_pull_v2.csv` source data: 572 Overdue Restock / 108 Dead Stock Candidate / 93 Seasonal Dormant / 773 total).
+
+**[REVISION, July 31, 2026 — a forensic review pass found and fixed a double-counting bug in `full_transactions`]** 572 is superseded. `full_transactions` was systematically double-counting all 228,297 unattributed transactions (root cause: Query 151 never filtered `clean_transactions` to `customer_id IS NOT NULL` before unioning it with `unattributed_transactions`, a subset copy of those same rows). Since this field's formula filters on `[Monetary Net] >= 1000` — a value directly affected by the bug — the actual SKU count changes: **the corrected population is 513, not 572** (confirmed independently twice, via Query 173's direct count and Query 174's rebuilt category assignment, zero discrepancy between them). The formula logic itself is unchanged; Tableau is live-connected to PostgreSQL, so this field will automatically reflect 513 once the underlying data is corrected and the workbook refreshes — no formula edit needed, only re-verification against the corrected count.
 
 ---
 
@@ -253,7 +255,7 @@ The Status section above states "equivalent drill-down wiring for `Frequency Spi
 
 **[REVISION — Status section, corrected following Fields 8–10's build (Overdue Restock), run July 24, 2026]**
 
-Chapter Five's `stock_behavior_fields` data source is now connected (via a Tableau relationship to `full_transactions`, not a join). Fields 8 (`Overdue Multiple`), 9 (`Inventory Signal Category (Q174)`), and 10 (`Exhibit URL (Overdue Restock)`) are built, verified against Query 174's 572-SKU population, and confirmed working end-to-end — an "Overdue Restock Overview" worksheet with a mark-click URL action to `overdue_restock_standalone_3d.html`, opening in a new browser tab. Remaining Chapter Five work: Dead Stock Candidate / Seasonal Dormant worksheet and exhibit routing (requires extending Field 9's category logic with the `seasonal_skus` subquery against `full_transactions`), Inventory Signal Overview combined dashboard, and the Cohort & Edge-Case Deep Dive dashboards.
+Chapter Five's `stock_behavior_fields` data source is now connected (via a Tableau relationship to `full_transactions`, not a join). Fields 8 (`Overdue Multiple`), 9 (`Inventory Signal Category (Q174)`), and 10 (`Exhibit URL (Overdue Restock)`) are built, verified against Query 174's 572-SKU population **[corrected to 513, July 31, 2026 — see Field 9's revision note above]**, and confirmed working end-to-end — an "Overdue Restock Overview" worksheet with a mark-click URL action to `overdue_restock_standalone_3d.html`, opening in a new browser tab. Remaining Chapter Five work: Dead Stock Candidate / Seasonal Dormant worksheet and exhibit routing (requires extending Field 9's category logic with the `seasonal_skus` subquery against `full_transactions`), Inventory Signal Overview combined dashboard, and the Cohort & Edge-Case Deep Dive dashboards.
 
 ---
 
@@ -340,6 +342,8 @@ END
 
 **Result:** ✅ Passed — **572 Overdue Restock / 108 Dead Stock Candidate / 93 Seasonal Dormant / 3,961 Null**, matching Query 174's confirmed populations exactly (572/108/93, 773 total categorized).
 
+**[REVISION, July 31, 2026]** Superseded — see Field 9's revision note. Corrected: **513 Overdue Restock / 108 Dead Stock Candidate / 93 Seasonal Dormant / 4,020 Null** (714 total categorized, up from the prior 773 since 59 fewer SKUs qualify as Overdue Restock under corrected `Monetary Net` values). Dead Stock Candidate and Seasonal Dormant were both independently confirmed unaffected by the bug — only the Overdue Restock branch of this field's logic changes in practice, not the formula itself.
+
 **Note on the 201 figure referenced elsewhere in project materials:** 108 is not a discrepancy against the 201-candidate figure used in the storyboard and prior session notes — it's the same funnel at a later stage. Query 163/164 originally flagged 201 dead-stock candidates; Query 165's seasonality safeguard found 93 of those 201 were seasonal-only (entire order history clustered in Nov/Dec) and excluded them from clearance, leaving 108 as the genuine dead-stock population (201 − 93 = 108 exactly). Both numbers are correct; they describe pre- and post-safeguard counts of the same investigation.
 
 **Note:** Field 9 (the collapsed-bucket version) is left in place, unedited, per the append-only/nothing-deleted standing rule — Field 14 supersedes it for any view needing the full three-way split, but Field 9 remains valid for contexts where only the Overdue Restock/Not-Overdue-Restock distinction matters.
@@ -367,52 +371,127 @@ END
 
 **[REVISION — Status section, corrected following Fields 11–15's build (Dead Stock/Seasonal Dormant), run July 25, 2026]**
 
-The prior revision listed "Dead Stock Candidate / Seasonal Dormant worksheet and exhibit routing" as remaining work. This is now superseded: Fields 11–14 correctly port Query 174's `seasonal_skus` subquery logic into Tableau (verified against known True/False cases and the full 572/108/93 population split), and Field 15 provides exhibit routing. The "Dead Stock Seasonal Overview" worksheet is built — color-split by category (Dead Stock Candidate vs. Seasonal Dormant), tooltip configured, mark-click URL action confirmed working end-to-end to `dead_stock_seasonal_deepdive_3d.html` in a new browser tab. Remaining Chapter Five work: Inventory Signal Overview (combined dashboard showing all three categories together), plus the Cohort & Edge-Case Deep Dive dashboards carried over from Chapter Four.
+The prior revision listed "Dead Stock Candidate / Seasonal Dormant worksheet and exhibit routing" as remaining work. This is now superseded: Fields 11–14 correctly port Query 174's `seasonal_skus` subquery logic into Tableau (verified against known True/False cases and the full 572/108/93 population split **[corrected to 513/108/93, July 31, 2026 — see Field 14's revision note above]**), and Field 15 provides exhibit routing. The "Dead Stock Seasonal Overview" worksheet is built — color-split by category (Dead Stock Candidate vs. Seasonal Dormant), tooltip configured, mark-click URL action confirmed working end-to-end to `dead_stock_seasonal_deepdive_3d.html` in a new browser tab. Remaining Chapter Five work: Inventory Signal Overview (combined dashboard showing all three categories together), plus the Cohort & Edge-Case Deep Dive dashboards carried over from Chapter Four.
 
 ---
 
-## Fields 16–22: Exhibit URL (Nov 2010 Cohort)
+## Fields 16–21: Exhibit URL (Nov 2010 Cohort)
 
-**[REVISION — confirmed built, July 31, 2026]** All six worksheets/fields below are now built, per confirmation. This document doesn't yet have the per-field verification detail (population counts, click-test confirmations) that every other field above carries — that write-up is still owed, following the same format used for Fields 1-15, before this section can be treated as carrying the document's usual verification bar. Until then, treat "built" as confirmed but "verified to this document's standard" as outstanding.
+**[REVISION — confirmed built, July 31, 2026]** All six worksheets/fields below are now built, per confirmation. Restructured below into the same per-field WHAT/WHY/Formula/Verification/Result format used throughout this document (Fields 1-15), rather than the single draft table this section originally carried.
 
-**⚠️ Status note (superseded above, kept per append-only rule):** Unlike every field above, Fields 16–22 have **not** been built in Tableau, click-tested, or checked against a known population count. This section is a draft of the calculated-field formulas following the same pattern as Fields 10 and 15, prepared ahead of the actual Nov 2010 Cohort Tableau wiring so the build has a starting point. Per this document's own standing rule, none of these should be treated as working until each is built, verified against `chapter_four_calculated_fields.md`'s usual bar (a known number, not "it looks right"), and confirmed with a live end-to-end click test — the same discipline applied to every field above.
+**Design decision confirmed (July 26, 2026):** one worksheet per segmentation/exhibit (matching the simple constant-string pattern used in Fields 10 and 15), grouped together by data segmentation type in the dashboard layout — not a single combined overview with branching URL logic. Each cohort segmentation's bar chart functions as its own "expandable deep dive": since every 3D exhibit already contains all of that segmentation's categories as legend-toggleable traces, every bar/mark in a given worksheet correctly routes to the same single exhibit filename regardless of which bar was clicked.
 
-**Design decision confirmed (July 26, 2026):** one worksheet per segmentation/exhibit (matching the simple constant-string pattern used in Fields 10 and 15), grouped together by data segmentation type in the dashboard layout — not a single combined overview with branching URL logic. Each cohort segmentation's bar chart functions as its own "expandable deep dive": since every 3D exhibit already contains all of that segmentation's categories as legend-toggleable traces, every bar/mark in a given worksheet correctly routes to the same single exhibit filename regardless of which bar was clicked. The drafted fields below already match this confirmed design and do not need to be reworked — only built and verified in Tableau.
+**Fork exception (per this project's standing "build both forks" rule):** Acquisition Month is the one segmentation in this cohort set with a real fork (bucketed 4-band vs. full 13-month gradient, both built and compared earlier in this project). The Gradient fork was dropped from Tableau wiring (July 26, 2026) after rendering as an uninformative monotonic line — Bucketed alone covers Acquisition Month in the live build, bringing the total to 6 fields across 6 worksheets, not 7.
 
-**Fork exception (per this project's standing "build both forks" rule):** where a segmentation has two genuinely different built variants rather than one chosen version, both get their own worksheet — not just the one that was ultimately preferred. Acquisition Month is the one case in this cohort set with a real fork (bucketed 4-band vs. full 13-month gradient, both built and compared earlier in this project), so it gets two worksheets/fields below instead of one. The other five segmentations (Lifecycle, Isolated, Frequency Buckets, High-Value Tail, Last-Order Timing) each have a single built version, so no fork split applies to them.
+**Filename note:** `nov_2010_cohort_deepdive_3d.html` (615-customer cohort vs. 580-customer peer-scale comparison) is a separate, valid, built file — it is not wired into this Tableau dashboard. The Isolated field below correctly targets `nov_2010_cohort_isolated_3d.html` (the 615-vs-1,308-dense-backdrop version), confirmed by direct check July 30, 2026 after two earlier incorrect notes on this file were superseded per the append-only rule.
 
-**Filename confirmed (July 26, 2026):** `nov_2010_cohort_deepdive_3d.html` was directly uploaded and inspected — confirmed as the "Isolated — Deep Dive" exhibit (615-customer cohort against a 580-customer peer-scale comparison sample, same recency/frequency/monetary axes as the other Isolated exhibit).
+---
 
-**[REVISION — Isolated Deep Dive dropped from Tableau wiring plan, decided July 26, 2026]** Immediately after confirming the filename above, the design decision itself made this exhibit's dedicated worksheet unnecessary: since every segmentation worksheet now functions as its own "expandable deep dive" (per the confirmed design decision above — the 3D exhibit already contains all categories as legend-toggleable traces), a separate standalone "Isolated Deep Dive" worksheet/field routing to a peer-scale comparison view is redundant. The Isolated (General) exhibit alone covers this segmentation. `nov_2010_cohort_deepdive_3d.html` remains a valid, built exhibit file — it simply isn't being wired into this Tableau dashboard. Total Nov 2010 Cohort worksheets/fields for Tableau: 6 segmentations (Lifecycle, Isolated, Frequency Buckets, High-Value Tail, Acquisition Month × 2 forks, Last-Order Timing) across 7 fields, not 7 segmentations/8 fields as previously drafted.
+### Field 16: Exhibit URL (Nov 2010 Cohort — Lifecycle)
 
-**[REVISION — field count updated, July 26, 2026]** The 7-field count above included both Acquisition Month forks. With the Gradient fork subsequently dropped from Tableau wiring (see the Fields 16-22 table below), the live count is **6 segmentations across 6 fields** — Bucketed alone covers Acquisition Month.
+**WHAT:** Resolves to the drill-down exhibit filename for the Lifecycle worksheet's mark-click URL action.
 
-**[REVISION — correction to the note directly above, same day]** The reasoning above ("Isolated Deep Dive dropped, file unused") was incorrect on one point: `nov_2010_cohort_deepdive_3d.html` was not left unused — it was **renamed to `nov_2010_cohort_isolated_3d.html`**, superseding the file that previously held that name (the dense-1,308-customer-backdrop version). So the single "Isolated" exhibit now wired into the Tableau plan is the **peer-scale 580-customer comparison version** (what this document had been calling "Deep Dive"), not the dense-backdrop version. The dense-backdrop version no longer exists under either filename. Field 17's population description below is corrected accordingly.
+**WHY:** Same single-population pattern as Field 10 — the worksheet is already filtered to the Nov 2010 Cohort via Field 2, so no branching IF/THEN logic is needed.
 
-**[REVISION — correcting the two entries directly above, confirmed by Ree July 30, 2026]** Both prior notes were wrong. `nov_2010_cohort_isolated_3d.html` is, and has always remained, the standalone "Nov 2010 Cohort isolated from everyone else" view — the 615-customer cohort plotted against a **1,308-customer systematic sample of the remaining population** (the dense backdrop), built before the cohort was later broken out into its individual segmentation exhibits (Frequency Buckets, High-Value Tail, etc.). No rename occurred. `nov_2010_cohort_deepdive_3d.html` remains its own separate, valid, built file (615-customer cohort vs. 580-customer peer-scale comparison) — it simply isn't wired into the Tableau plan, consistent with the original "dropped as redundant" reasoning two entries above. Field 17's formula and target below (`nov_2010_cohort_isolated_3d.html`) were already pointing at the correct file; only the population description needed correcting.
-
-**Formula pattern (draft, one per exhibit — same shape as Field 10):**
+**Formula:**
 ```
 "nov_2010_cohort_lifecycle_3d.html"
 ```
 
-Repeated per exhibit, filtered by the existing `Nov 2010 Cohort Flag` (Field 2) on each worksheet:
+**Verification:** Confirmed built and wired, per direct confirmation July 31, 2026. Live end-to-end click-test and the exhibit's exact population breakdown (tenure × frequency × monetary categories) are not yet individually documented here — owed, same as the other fields below.
 
-| Draft field name | Formula | Target exhibit |
-|---|---|---|
-| Exhibit URL (Nov 2010 Cohort — Lifecycle) | `"nov_2010_cohort_lifecycle_3d.html"` | Lifecycle (tenure × frequency × monetary) |
-| Exhibit URL (Nov 2010 Cohort — Isolated) | `"nov_2010_cohort_isolated_3d.html"` | Isolated (615-customer cohort vs. 1,308-customer dense-backdrop sample of the remaining population — see July 30 correction above; not the 580-customer "Deep Dive" file, which stays unwired) |
-| Exhibit URL (Nov 2010 Cohort — Frequency Buckets) | `"nov_2010_cohort_frequency_buckets_3d.html"` | Frequency Buckets (1 / 2–5 / 6–15 / 16+) |
-| Exhibit URL (Nov 2010 Cohort — High-Value Tail) | `"nov_2010_cohort_high_value_tail_3d.html"` | High-Value Tail (≥£5,000 net) |
-| Exhibit URL (Nov 2010 Cohort — Acquisition Month, Bucketed) | `"nov_2010_cohort_acquisition_month_3d.html"` | Acquisition Month, bucketed fork (4-band: Pre-Oct/Oct/Nov/Dec 2010) — see revision note below on filename |
-| ~~Exhibit URL (Nov 2010 Cohort — Acquisition Month, Gradient)~~ | ~~`"nov_2010_cohort_acquisition_month_3d_gradient.html"`~~ | **[REVISION — dropped from Tableau wiring, July 26, 2026]** Acquisition Month, gradient fork (13-month continuous scale) — rendered as an uninformative monotonic line in Tableau once built, so this field was not carried into the dashboard. The exhibit HTML file itself remains valid and built; Bucketed alone covers Acquisition Month in the live Tableau build. Row preserved per the append-only rule rather than removed. |
+**Result:** Built. Per-field population count and click-test confirmation pending.
 
-**[REVISION — filename correction, same day]** The Bucketed field above originally routed to `nov_2010_cohort_acquisition_month_3d_bucketed.html`. That file is superseded — it's an earlier-named duplicate of the same chart, and the officially live exhibit (with the caption, legend, and verified 305/123/153/34 counts) is the unsuffixed `nov_2010_cohort_acquisition_month_3d.html`. Corrected above; if `_bucketed.html` still exists as a file, treat it as a leftover duplicate, not a second valid exhibit.
-| Exhibit URL (Nov 2010 Cohort — Last-Order Timing) | `"nov_2010_cohort_last_order_deepdive_3d.html"` | Last-Order-Timing Deep Dive (Oct/Nov/Dec 2010) |
+---
 
-**Verification:** Not yet performed at the time this section was drafted. **[REVISION, July 31, 2026]** Worksheets confirmed built; the field-by-field live end-to-end click tests (Field 10's pattern — confirming each mark-click opens the correct exhibit via the GitHub Pages base-path prefix) have not yet been individually documented here. Owed: one WHAT/WHY/Formula/Verification/Result write-up per field, matching Fields 1-15's format.
+### Field 17: Exhibit URL (Nov 2010 Cohort — Isolated)
 
-**Result:** **[REVISION, July 31, 2026]** Built — superseding "Not yet built" below. Per-field verification detail (population counts, click-test confirmations) still owed; this section should get the same treatment as Fields 1-15 once that detail is available, rather than being left as a draft table. *(Original text, preserved: "Not yet built. This section should be revised in place — not silently edited — once each field is actually built and verified, per this document's standing rule.")*
+**WHAT:** Resolves to the drill-down exhibit filename for the Isolated worksheet's mark-click URL action.
+
+**WHY:** Same single-population pattern as Field 10.
+
+**Formula:**
+```
+"nov_2010_cohort_isolated_3d.html"
+```
+
+**Verification:** Confirmed built and wired, per direct confirmation July 31, 2026. Population is separately confirmed and stable: the 615-customer Nov 2010 Cohort plotted against a 1,308-customer systematic sample of the remaining population (the dense backdrop) — this figure was directly confirmed by Ree on July 30, 2026 after two earlier incorrect notes on this file were corrected. Live end-to-end click-test on the Tableau worksheet itself is not yet individually documented here.
+
+**Result:** Built. Population (615 vs. 1,308) confirmed. Click-test confirmation pending.
+
+---
+
+### Field 18: Exhibit URL (Nov 2010 Cohort — Frequency Buckets)
+
+**WHAT:** Resolves to the drill-down exhibit filename for the Frequency Buckets worksheet's mark-click URL action.
+
+**WHY:** Same single-population pattern as Field 10.
+
+**Formula:**
+```
+"nov_2010_cohort_frequency_buckets_3d.html"
+```
+
+**Verification:** Confirmed built and wired, per direct confirmation July 31, 2026. This exhibit's SQL source (Query 181, "Revisiting Query 101") carries its own confirmed population and the 91.5%→91.4% correction already documented in `investigation_log.md`. Live end-to-end click-test on the Tableau worksheet itself is not yet individually documented here.
+
+**Result:** Built. Click-test confirmation pending.
+
+---
+
+### Field 19: Exhibit URL (Nov 2010 Cohort — High-Value Tail)
+
+**WHAT:** Resolves to the drill-down exhibit filename for the High-Value Tail worksheet's mark-click URL action.
+
+**WHY:** Same single-population pattern as Field 10.
+
+**Formula:**
+```
+"nov_2010_cohort_high_value_tail_3d.html"
+```
+
+**Verification:** Confirmed built and wired, per direct confirmation July 31, 2026. Population is customers at or above £5,000 net spend within the Nov 2010 Cohort — exact count not yet individually documented here. Live end-to-end click-test on the Tableau worksheet itself is not yet individually documented here.
+
+**Result:** Built. Population count and click-test confirmation pending.
+
+---
+
+### Field 20: Exhibit URL (Nov 2010 Cohort — Acquisition Month, Bucketed)
+
+**WHAT:** Resolves to the drill-down exhibit filename for the Acquisition Month worksheet's mark-click URL action.
+
+**WHY:** Same single-population pattern as Field 10. This is the surviving fork — see the Gradient note above.
+
+**Formula:**
+```
+"nov_2010_cohort_acquisition_month_3d.html"
+```
+
+**Filename note:** The unsuffixed filename above is the live, correct target. `nov_2010_cohort_acquisition_month_3d_bucketed.html` is a superseded, earlier-named duplicate of the same chart — if it still exists as a file, it should not be treated as a second valid exhibit.
+
+**Verification:** Confirmed built and wired, per direct confirmation July 31, 2026. Population is the most fully verified of this group: the exhibit's confirmed legend shows 305/123/153/34 across the four acquisition-month buckets (Pre-Oct/Oct/Nov/Dec 2010), population 615 (3 cancellation-only customers held out, one each landing conceptually in the Oct/Nov/Dec buckets in the full 618-count, documented as an expected 1-count-per-bucket gap in `investigation_log.md`, not a bug). Live end-to-end click-test on the Tableau worksheet itself is not yet individually documented here.
+
+**Result:** Built. Population (305/123/153/34, 615 total) confirmed. Click-test confirmation pending.
+
+---
+
+### Field 21: Exhibit URL (Nov 2010 Cohort — Last-Order Timing)
+
+**WHAT:** Resolves to the drill-down exhibit filename for the Last-Order-Timing worksheet's mark-click URL action.
+
+**WHY:** Same single-population pattern as Field 10.
+
+**Formula:**
+```
+"nov_2010_cohort_last_order_deepdive_3d.html"
+```
+
+**Verification:** Confirmed built and wired, per direct confirmation July 31, 2026. Population is the Nov 2010 Cohort split by last-order month (Oct/Nov/Dec 2010) — exact count not yet individually documented here. Live end-to-end click-test on the Tableau worksheet itself is not yet individually documented here.
+
+**Result:** Built. Population count and click-test confirmation pending.
+
+---
+
+**Section status:** All six fields confirmed built and wired as of July 31, 2026 — superseding the earlier "PROPOSED, NOT YET BUILT" status this section carried. What's genuinely closed: Isolated's and Acquisition Month's populations, both independently confirmed with real numbers. What's still owed, per field: a live click-test confirming the mark-click action opens the correct exhibit (Field 10's pattern — GitHub Pages base-path prefix, new browser tab), and for Lifecycle/Frequency Buckets/High-Value Tail/Last-Order Timing, the exact population count each worksheet resolves to. Not fabricated here in the interest of matching this document's own standard: a number without a confirmed source doesn't belong in this file.
 
 ---
 

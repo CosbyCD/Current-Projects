@@ -54,3 +54,29 @@ WHERE recency_days >= 377
 -- not 201. The £14,025.45 aggregate figure should not be cited without
 -- this caveat, since it includes seasonal items that will sell again.
 -- See Query 165 for the full account and the revised recommendation.]
+-- [FLAGGED] This query was likely run before stock_behavior_fields was
+-- rebuilt against the corrected full_transactions. total_dead_stock_
+-- candidates (COUNT(*), same WHERE clause as Query 163: recency_days
+-- and frequency_completed only) and max_distinct_customers
+-- (distinct_customers sources from clean_transactions, never touched by
+-- the bug) are both structurally SAFE -- 201 and 3 are confirmed
+-- correct with no rerun needed, consistent with Query 163's confirmed
+-- population-membership result. total_historical_net_value is a
+-- SUM(monetary_net) across the same 201-SKU population -- monetary_net
+-- confirmed affected (Query 155) -- so this figure is stale and needs
+-- an actual rerun to get the corrected aggregate. Given every displayed
+-- monetary_net value in Query 163's top-30 corrected DOWNWARD (several
+-- by exactly 50%), the corrected total is expected to be lower than
+-- £14,025.45, not higher -- but the exact figure needs confirming, not
+-- assumed.
+
+-- [CONFIRMED via rerun against the rebuilt stock_behavior_fields]
+-- Result: 201, 3, £13,352.35. total_dead_stock_candidates and
+-- max_distinct_customers unchanged exactly as predicted (201, 3).
+-- total_historical_net_value corrected downward from £14,025.45 to
+-- £13,352.35 (-£673.10), consistent with the direction predicted from
+-- Query 163's corrected top-30 values. This is the corrected aggregate
+-- to cite going forward -- £14,025.45 reflects the pre-fix, inflated
+-- figure and should not be used in any downstream reference
+-- (storyboard, README, chapter_four_calculated_fields.md) from this
+-- point on.

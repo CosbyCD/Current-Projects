@@ -32,3 +32,24 @@ FROM uk_retail.unattributed_transactions;
 -- was caused by comparing against clean_transactions' pre-amendment row
 -- count rather than its current one -- corrected here, no further
 -- action needed. full_transactions is cleared for use in Phase 2.
+
+-- [REVISION] Both the RESULT block above ("matching full_transactions
+-- exactly -- the UNION ALL is complete and correct, no rows lost") and
+-- the CONFIRMED FINDING below are superseded. The raw numbers in RESULT
+-- are accurate (1,022,517 + 228,297 = 1,250,814 is correct arithmetic),
+-- but the interpretation drawn from that match -- in both blocks -- was
+-- wrong. A matching sum doesn't prove a correct disjoint union; it can't
+-- distinguish that from a duplicated one, because unattributed_
+-- transactions is a subset COPY of clean_transactions (confirmed at
+-- Query 96: "clean_transactions itself is left completely unchanged"
+-- when the split was made), not a disjoint set. Row-level verification
+-- at Queries 151b and 151c found that all 228,297 unattributed_
+-- transactions rows are also embedded in clean_transactions and were
+-- being counted twice -- something this query's aggregate-only check
+-- could never surface. full_transactions' actual correct row count is
+-- 1,022,517, not 1,250,814; the corrected build is Query 151d. Left
+-- standing per the append-only rule: this is a genuine example of an
+-- arithmetic check passing while the underlying data was still wrong --
+-- exactly the gap this project's row-level-verification standard exists
+-- to catch, and a useful documented instance of it doing so, one query
+-- late.

@@ -19,3 +19,17 @@ SELECT
 FROM uk_retail.full_transactions
 GROUP BY stock_code
 ORDER BY stock_code;
+
+-- RESULT: 4,734 rows returned, all distinct stock_code values -- no
+-- duplicate SKUs, matching the population Query 159 later confirms as
+-- the full stock recency count.
+
+-- CONFIRMED FINDING: This query was run against full_transactions
+-- before the double-counting bug (confirmed and fixed at Queries
+-- 151b/151c/151d) was corrected. Initially reasoned to be unaffected on
+-- structural grounds (MAX(invoice_date) is duplicate-insensitive), then
+-- independently confirmed by rerunning this exact query against the
+-- corrected full_transactions and diffing the two outputs directly:
+-- 4,734 rows in both runs, identical stock_code sets, zero value
+-- differences across every recency_days figure. Not an assumption --
+-- verified.

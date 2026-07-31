@@ -39,3 +39,13 @@ FROM uk_retail.stock_behavior_fields;
 -- specific need arises, but is deliberately not built now, consistent
 -- with this sprint's narrow, petit scope. Phase 3 is closed. Ready for
 -- Phase 4's headline findings.
+
+-- [ADDENDUM] Unaffected by the full_transactions double-counting bug
+-- (confirmed and fixed at Queries 151b/151c/151d) regardless of when
+-- this query was actually run. It touches only stock_code
+-- (COUNT DISTINCT and a REGEXP_REPLACE transform of that same column)
+-- -- the bug never changed which SKUs existed or their stock_code
+-- values, only certain other columns' contents (monetary_gross/net,
+-- line_item_return_rate_pct) within rows built pre-fix. This query's
+-- result is identical whether it ran against the old or the rebuilt
+-- stock_behavior_fields. No rerun needed.
