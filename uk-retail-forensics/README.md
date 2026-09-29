@@ -2,7 +2,7 @@
 
 *Want the full investigation instead of the summary? [Start here →](docs/investigation_log.md)*
 
-*Want to see the finished product? [Start here →](https://public.tableau.com/app/profile/cdcosby/viz/uk_retail/Dashboard01-Intro)*
+*Want to see the finished product? [Start here →](https://public.tableau.com/app/profile/cdcosby/viz/uk_retail/UKRetail)*
 
 **Phase 1 (complete):** the prototype below — built deliberately against a static, historical dataset to validate the concept before investing in live infrastructure. It worked. **Phase 2 (in progress):** rebuilding this as a live, real-time application — Flask backend, HTML5 frontend — so the same forensic methodology runs against production-style data instead of a fixed export.
 
